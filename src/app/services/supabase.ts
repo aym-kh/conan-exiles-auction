@@ -12,6 +12,10 @@ export class SupabaseService {
     private currentUser$ = new BehaviorSubject<User | null | undefined>(undefined);
     public readonly user$: Observable<User | null | undefined> = this.currentUser$.asObservable();
 
+    get client(): SupabaseClient {
+        return this.supabase;
+    }
+
     constructor() {
         this.supabase = createClient(
             environment.supabaseUrl,
