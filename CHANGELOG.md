@@ -11,6 +11,8 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-10
+
 ### Added
 - Discord OAuth sign-in and Discord server selection.
 - Auction creation with descriptions, blind-auction settings, end times, and configurable weighted currencies.
