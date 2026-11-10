@@ -1,11 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { SupabaseService } from './services/supabase';
 import { RouterOutlet } from '@angular/router';
-import packageJson from '../../package.json';
+import { Button } from './components/ui/button/button';
+import { Login } from './components/login/login';
 
 @Component({
   imports: [
     RouterOutlet,
+    Login,
+    Button,
   ],
   selector: 'app-root',
   styleUrl: './app.css',
@@ -13,5 +16,5 @@ import packageJson from '../../package.json';
 })
 export class App {
   protected readonly supabaseService = inject(SupabaseService);
-  protected readonly version = packageJson.version;
+
 }
