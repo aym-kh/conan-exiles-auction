@@ -10,3 +10,11 @@ Maintainers cut releases with `npm run release -- patch|minor|major` (see
 entries into a dated section automatically.
 
 ## [Unreleased]
+
+### Added
+- Discord OAuth sign-in and Discord server selection.
+- Auction creation with descriptions, blind-auction settings, end times, and configurable weighted currencies.
+- Auction detail pages with owner-only editing and deletion.
+- Real-time bidding with Discord server membership verification, currency-weighted bid validation, and bid history.
+- Database-enforced auction ownership and bid rules, plus GitHub Actions deployment for Supabase migrations and the bidding Edge Function.
+- The ugliest ui you've ever seen
