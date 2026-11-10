@@ -4,12 +4,17 @@ import { SupabaseService } from '../../services/supabase';
 import { Auction } from '../../services/auction';
 import { DiscordGuild } from '../../types';
 import { Router } from '@angular/router';
+import { ServerPlate } from '../ui/server-plate/server-plate';
 
 @Component({
   selector: 'app-guild-selector',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './guild-selector.html'
+  imports: [
+    CommonModule,
+    ServerPlate,
+  ],
+  templateUrl: './guild-selector.html',
+  styleUrl: './guild-selector.css'
 })
 export class GuildSelector implements OnInit {
 

@@ -3,8 +3,9 @@
 @import 'tailwindcss';
 
 :root {
-    --exile-font: 'Skranji', 'Book Antiqua', Palatino, serif;
+    --exile-font: 'Caesar Dressing', 'Book Antiqua', Palatino, serif;
     --exile-text: #E7C79C;
+    --exile-text-2: #73A8B2;
 }
 
 * {
