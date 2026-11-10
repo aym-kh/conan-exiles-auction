@@ -2,6 +2,7 @@ import { Component, OnInit, Output, EventEmitter, inject, signal } from '@angula
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
 import { DiscordGuild } from '../../types';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-guild-selector',
@@ -12,6 +13,7 @@ import { DiscordGuild } from '../../types';
 export class GuildSelector implements OnInit {
 
   private readonly supabaseService = inject(SupabaseService);
+  private readonly router = inject(Router);
 
   private guilds = signal<DiscordGuild[]>([]);
   private selectedGuild = signal<DiscordGuild | null>(null);
@@ -29,8 +31,7 @@ export class GuildSelector implements OnInit {
   }
 
   protected selectGuild(guild: DiscordGuild) {
-    this.selectedGuild.set(guild);
-    this.guildSelected.emit(guild);
+    this.router.navigate(['/guilds', guild.id]);
   }
 
   protected getGuildIcon(guild: DiscordGuild): string {

@@ -1,14 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { Login } from './components/login/login';
 import { SupabaseService } from './services/supabase';
-import { GuildSelector } from './components/guild-selector/guild-selector';
-import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   imports: [
-    CommonModule,
-    Login,
-    GuildSelector,
+    RouterOutlet,
   ],
   selector: 'app-root',
   styleUrl: './app.css',
@@ -16,9 +12,4 @@ import { CommonModule } from '@angular/common';
 })
 export class App {
   protected readonly supabaseService = inject(SupabaseService);
-
-  protected onGuildSelected($event: any) {
-    console.log($event);
-
-  }
 }

@@ -1,6 +1,10 @@
-<app-login></app-login>
+<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <header
+        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+        <h1>Conan Exiles Auction House</h1>
+        <!-- Quick navigation or user badge can go here -->
+    </header>
 
-
-@if (supabaseService.user$ | async) {
-<app-guild-selector (guildSelected)="onGuildSelected($event)"></app-guild-selector>
-}
+    <!-- Router outlet renders the active matched route -->
+    <router-outlet></router-outlet>
+</div>
