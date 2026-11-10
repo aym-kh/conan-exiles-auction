@@ -15,7 +15,7 @@
 .button-label {
     position: relative;
     z-index: 1;
-    font-size: 1.5rem;
+    font-size: 1em;
 }
 
 .button-bg {
@@ -29,5 +29,5 @@
 
 
 .conan-button:hover {
-    transform: scale(1.1);
+    transform: scale(0.98);
 }
