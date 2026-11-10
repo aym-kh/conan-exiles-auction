@@ -1,1 +1,6 @@
 <app-login></app-login>
+
+
+@if (supabaseService.user$ | async) {
+<app-guild-selector (guildSelected)="onGuildSelected($event)"></app-guild-selector>
+}

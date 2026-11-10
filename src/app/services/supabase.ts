@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { DiscordGuild } from '../types';
 
 @Injectable({
     providedIn: 'root',
@@ -44,5 +45,32 @@ export class SupabaseService {
 
     getClient(): SupabaseClient {
         return this.supabase;
+    }
+
+    async getUserGuilds(): Promise<DiscordGuild[]> {
+        const { data: { session }, error } = await this.supabase.auth.getSession();
+
+        if (error || !session?.provider_token) {
+            console.error('No provider token found in current session.', error);
+            return [];
+        }
+
+        try {
+            const response = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+                headers: {
+                    Authorization: `Bearer ${session.provider_token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Discord API error: ${response.statusText}`);
+            }
+
+            const guilds: DiscordGuild[] = await response.json();
+            return guilds;
+        } catch (err) {
+            console.error('Failed to fetch Discord guilds:', err);
+            return [];
+        }
     }
 }

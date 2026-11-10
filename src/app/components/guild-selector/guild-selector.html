@@ -1,0 +1,41 @@
+<div style="padding: 20px; font-family: sans-serif;">
+    <h3>Select Your Discord Server</h3>
+
+    @if (isLoading()) {
+    <p>Loading your servers...</p>
+    } @else {
+    @if (guilds().length === 0) {
+    <p>No servers found or session missing provider token. Try re-logging in.</p>
+    } @else {
+    <ul style="list-style: none; padding: 0;">
+        @for (guild of guilds(); track guild.id) {
+        <li (click)="selectGuild(guild)"
+            [style.border]="selectedGuild()?.id === guild.id ? '2px solid #5865F2' : '1px solid #ccc'"
+            style="display: flex; align-items: center; padding: 10px; margin-bottom: 8px; border-radius: 6px; cursor: pointer;">
+
+            <img [src]="getGuildIcon(guild)" [alt]="guild.name"
+                style="width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; object-fit: cover;" />
+
+            <div style="flex-grow: 1;">
+                <strong style="display: block;">{{ guild.name }}</strong>
+                <small style="color: #666;">ID: {{ guild.id }}</small>
+            </div>
+
+            @if (guild.owner) {
+            <span
+                style="font-size: 11px; background: #fee75c; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+                Owner
+            </span>
+            }
+        </li>
+        }
+    </ul>
+    }
+    }
+
+    @if (selectedGuild(); as activeGuild) {
+    <div style="margin-top: 20px; padding: 10px; background: #eef2ff; border-radius: 6px;">
+        Active Server Selected: <strong>{{ activeGuild.name }}</strong> ({{ activeGuild.id }})
+    </div>
+    }
+</div>
