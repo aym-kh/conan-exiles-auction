@@ -70,7 +70,7 @@ CREATE TABLE bids (
   bidder_discord_id TEXT NOT NULL,
   bidder_name TEXT NOT NULL,
   bidder_avatar TEXT,
-  currency_symbol TEXT NOT NULL,
+  currencies TEXT NOT NULL,
   amount INT NOT NULL,
   calculated_weight INT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
