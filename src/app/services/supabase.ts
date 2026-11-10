@@ -1,18 +1,25 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
     providedIn: 'root',
 })
 export class SupabaseService {
     private supabase: SupabaseClient;
+    private currentUser$ = new BehaviorSubject<User | null | undefined>(undefined);
+    public readonly user$: Observable<User | null | undefined> = this.currentUser$.asObservable();
 
     constructor() {
         this.supabase = createClient(
             environment.supabaseUrl,
             environment.supabaseAnonKey,
         );
+
+        this.supabase.auth.onAuthStateChange((_event, session) => {
+            this.currentUser$.next(session?.user ?? null);
+        });
     }
 
     // Trigger Discord OAuth login with scopes for server listing and identity
@@ -21,23 +28,20 @@ export class SupabaseService {
             provider: 'discord',
             options: {
                 scopes: 'identify guilds',
-                redirectTo: `${window.location.origin}/dashboard`
+                redirectTo: window.location.origin
             }
         });
     }
 
-    // Sign out method
     async signOut() {
         await this.supabase.auth.signOut();
     }
 
-    // Get current active session user
     async getCurrentUser(): Promise<User | null> {
         const { data: { user } } = await this.supabase.auth.getUser();
         return user;
     }
 
-    // Expose base client for real-time bid subscriptions and custom queries
     getClient(): SupabaseClient {
         return this.supabase;
     }

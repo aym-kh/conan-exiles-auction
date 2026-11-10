@@ -1,0 +1,19 @@
+@let currentUser = user$ | async;
+
+@if (currentUser === undefined) {
+<p>Checking your session...</p>
+} @else if (currentUser) {
+<h3>Welcome, {{ currentUser.user_metadata?.['full_name'] }}!</h3>
+<button (click)="logout()"
+    style="background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+    Sign Out
+</button>
+} @else {
+<h2>Conan Exiles Auction House</h2>
+<p>Sign in with your Discord account to view servers and place bids.</p>
+
+<button (click)="loginWithDiscord()"
+    style="background-color: #5865F2; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+    Login with Discord
+</button>
+}

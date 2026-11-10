@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Login } from './components/login/login';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [Login],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
