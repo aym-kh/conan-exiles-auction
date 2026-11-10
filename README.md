@@ -7,8 +7,7 @@ The tool resolves non-standard server trade economies by allowing server manager
 ![License](https://img.shields.io/badge/license-MIT-black)
 ![Angular](https://img.shields.io/badge/Angular-v22+-red)
 
-<img src="./public/github/readme.png" width=700>
-
+<img src="./public/.github/readme.png" width=700>
 
 ## 🛠️ Tech Stack
 
