@@ -30,12 +30,70 @@
       </ul>
 
       <p>{{ currentAuction.is_blind ? 'Blind auction' : 'Open auction' }}</p>
-      <p>Status: {{ currentAuction.status }}</p>
+      <p>Status: {{ isAuctionExpired() ? 'ENDED' : currentAuction.status }}</p>
       <p>Ends: {{ currentAuction.end_time | date:'medium' }}</p>
       @if (errorMessage()) {
         <p role="alert" style="color: #f87171;">{{ errorMessage() }}</p>
       }
     </article>
+
+    <section style="margin-top: 20px; border: 1px solid #444; border-radius: 8px; padding: 20px;">
+      <h3>Bid history</h3>
+      @if (currentHighestBid(); as highestBid) {
+        <p>
+          Current highest: {{ highestBid.amount }} {{ highestBid.currency_symbol }}
+          (weight {{ highestBid.calculated_weight }})
+        </p>
+      } @else {
+        <p>No bids yet.</p>
+      }
+
+      @if (isBidsLoading()) {
+        <p>Loading bids...</p>
+      } @else if (bids().length > 0) {
+        <ol>
+          @for (bid of bids(); track bid.id) {
+            <li>
+              <strong>{{ bid.bidder_name ?? 'Anonymous bidder' }}</strong>:
+              {{ bid.amount }} {{ bid.currency_symbol }}
+              (weight {{ bid.calculated_weight }})
+              <small>{{ bid.created_at | date:'short' }}</small>
+            </li>
+          }
+        </ol>
+      }
+
+      @if (bidError()) {
+        <p role="alert" style="color: #f87171;">{{ bidError() }}</p>
+      }
+
+      @if (canBid()) {
+        <form [formGroup]="bidForm" (ngSubmit)="placeBid()">
+          <label>
+            Currency
+            <select formControlName="currencySymbol">
+              <option value="" disabled>Select currency</option>
+              @for (currency of currentAuction.currencies; track currency.symbol) {
+                <option [value]="currency.symbol">{{ currency.symbol }} (weight {{ currency.weight }})</option>
+              }
+            </select>
+          </label>
+          <label>
+            Amount
+            <input type="number" formControlName="amount" min="1" max="2147483647" step="1" />
+          </label>
+          <button type="submit" [disabled]="isPlacingBid() || bidForm.invalid">
+            {{ isPlacingBid() ? 'Submitting...' : 'Place bid' }}
+          </button>
+        </form>
+      } @else if (!currentUserId() && currentAuction.status === 'ACTIVE') {
+        <p>Sign in with Discord to place a bid.</p>
+      } @else if (currentUserId() === currentAuction.seller_discord_id) {
+        <p>You cannot bid on your own auction.</p>
+      } @else {
+        <p>This auction is no longer accepting bids.</p>
+      }
+    </section>
 
     @if (showEditModal() && isOwner()) {
       <app-auction-form

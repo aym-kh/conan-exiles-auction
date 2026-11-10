@@ -40,3 +40,14 @@ export type IUpdateAuctionPayload = Pick<
     ICreateAuctionPayload,
     'title' | 'description' | 'is_blind' | 'currencies' | 'end_time'
 >;
+
+export interface IAuctionBid {
+    id: string;
+    bidder_discord_id: string | null;
+    bidder_name: string | null;
+    bidder_avatar: string | null;
+    currency_symbol: string;
+    amount: number;
+    calculated_weight: number;
+    created_at: string;
+}
