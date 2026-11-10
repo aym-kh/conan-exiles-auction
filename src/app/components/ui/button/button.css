@@ -1,0 +1,33 @@
+.conan-button {
+    width: 150px;
+    height: 46px;
+    padding: 1rem 2rem;
+    /* overflow: hidden; */
+    position: relative;
+    cursor: pointer;
+    transition: transform 250ms ease-in-out;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button-label {
+    position: relative;
+    z-index: 1;
+    font-size: 1.5rem;
+}
+
+.button-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+
+
+.conan-button:hover {
+    transform: scale(1.1);
+}
