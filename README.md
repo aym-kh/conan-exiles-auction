@@ -1,59 +1,23 @@
 # ConanExilesAuction
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
+A lightweight, high-performance web application designed for gaming communities (specifically Conan Exiles servers) to run structured auctions without message bloat in Discord channels. 
 
-## Development server
+The tool resolves non-standard server trade economies by allowing server managers to define custom bidding currencies (e.g., Blood Crystals, Frags of Power, Gold Bars) with normalized numeric weights, automatically validating and sorting bids in real time.
 
-To start a local development server, run:
+![License](https://img.shields.io/badge/license-MIT-black)
+![Angular](https://img.shields.io/badge/Angular-v22+-red)
 
-```bash
-ng serve
-```
+<img src="./github/readme.png" width=700>
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
-## Code scaffolding
+## 🛠️ Tech Stack
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- **Framework:** Angular (Signals, Standalone Components, RxJS)
+- **Styling:** Tailwind CSS (Dark / High-Contrast Monochrome Theme)
+- **Backend:** SupaBase
+- **Deployment:** Netlify
 
-```bash
-ng generate component component-name
-```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🚀 Contributing
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+**Want to contribute?** See [CONTRIBUTING.md](./CONTRIBUTING.md).
