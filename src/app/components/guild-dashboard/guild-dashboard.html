@@ -4,9 +4,15 @@
             <h2>Server Auction Dashboard</h2>
             <p>Guild ID: <code>{{ guildId }}</code></p>
         </div>
-        <button (click)="loadAuctions()" style="padding: 8px 16px; cursor: pointer;">
-            Refresh Auctions
-        </button>
+        <div style="display: flex; gap: 8px;">
+            <button (click)="showCreateModal.set(true)"
+                style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                + Create Auction
+            </button>
+            <button (click)="loadAuctions()" style="padding: 8px 16px; cursor: pointer;">
+                Refresh
+            </button>
+        </div>
     </div>
 
     <hr style="margin: 20px 0;" />
@@ -22,23 +28,30 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
         @for (auction of auctions(); track auction.id) {
         <div style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; background: #fff;">
-            @if (auction.item_image_url) {
-            <img [src]="auction.item_image_url" [alt]="auction.item_name"
-                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px;" />
-            }
-            <h3 style="margin: 12px 0 6px 0;">{{ auction.item_name }}</h3>
-            <p style="color: #666; font-size: 14px;">{{ auction.item_description || 'No description provided.' }}</p>
+            <h3 style="margin: 12px 0 6px 0;">{{ auction.title }}</h3>
+            <p style="color: #666; font-size: 14px;">{{ auction.description || 'No description provided.' }}</p>
 
             <div style="margin-top: 12px; font-weight: bold;">
-                Starting Bid: {{ auction.starting_bid }} {{ auction.currency_symbol }}
+                @for (currency of auction.currencies; track currency.symbol) {
+                <span>{{ currency.symbol }} × {{ currency.weight }}@if (!$last) {, }</span>
+                }
             </div>
+            @if (auction.is_blind) {
+            <p>Blind auction</p>
+            }
 
             <small style="color: #888; display: block; margin-top: 6px;">
-                Ends: {{ auction.ends_at | date:'short' }}
+                Ends: {{ auction.end_time | date:'short' }}
             </small>
         </div>
         }
     </div>
     }
+    }
+
+    <!-- Render Create Modal when active -->
+    @if (showCreateModal()) {
+    <app-auction-form [guildId]="guildId" (auctionCreated)="onAuctionCreated()"
+        (closeModal)="showCreateModal.set(false)" />
     }
 </div>

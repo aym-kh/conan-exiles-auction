@@ -7,31 +7,31 @@ export interface DiscordGuild {
     features: string[];
 }
 
-export type TAuctionStatus = 'ACTIVE' | 'ENDED' | 'CANCELLED';
+export type TAuctionStatus = 'DRAFT' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
+
+export interface IAuctionCurrency {
+    symbol: string;
+    weight: number;
+}
 
 export interface IAuction {
     id: string;
-    guild_id: string;
-    created_by_discord_id: string;
-    item_name: string;
-    item_description?: string;
-    item_image_url?: string;
-    starting_bid: number;
-    min_increment: number;
-    currency_symbol: string; // e.g., 'Blood Crystals', 'Gold Bars'
-    status: TAuctionStatus;
-    ends_at: string;
-    created_at: string;
-    updated_at?: string;
+    guild_id: string | null;
+    seller_discord_id: string;
+    title: string;
+    description: string | null;
+    is_blind: boolean | null;
+    currencies: IAuctionCurrency[];
+    status: TAuctionStatus | null;
+    end_time: string;
+    created_at: string | null;
 }
 
 export interface ICreateAuctionPayload {
-    guild_id: string;
-    item_name: string;
-    item_description?: string;
-    item_image_url?: string;
-    starting_bid: number;
-    min_increment?: number;
-    currency_symbol: string;
-    ends_at: string;
+    guild_id: string | null;
+    title: string;
+    description: string | null;
+    is_blind: boolean;
+    currencies: IAuctionCurrency[];
+    end_time: string;
 }

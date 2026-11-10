@@ -1,1 +1,69 @@
-<p>auction-form works!</p>
+<div
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div
+        style="background: #fff; border-radius: 8px; padding: 24px; width: 100%; max-width: 500px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <h2 style="margin-top: 0;">Create New Auction</h2>
+
+        @if (errorMessage()) {
+        <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 12px;">
+            {{ errorMessage() }}
+        </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <!-- Auction title -->
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Title *</label>
+                <input type="text" formControlName="title" placeholder="e.g., Sword of Crom"
+                    style="width: 100%; padding: 8px; box-sizing: border-box;" />
+            </div>
+
+            <!-- Description -->
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Description</label>
+                <textarea formControlName="description" rows="3" placeholder="Flawless high-grade weapons, stats, etc."
+                    style="width: 100%; padding: 8px; box-sizing: border-box;"></textarea>
+            </div>
+
+            <label style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+                <input type="checkbox" formControlName="is_blind" />
+                Blind auction
+            </label>
+
+            <!-- Auction currencies and normalized weights -->
+            <div formArrayName="currencies" style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Currencies *</label>
+                @for (currency of currencyControls.controls; track $index) {
+                <div [formGroupName]="$index" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" formControlName="symbol" placeholder="Currency (e.g., Blood Crystals)"
+                        aria-label="Currency symbol" style="flex: 2; padding: 8px;" />
+                    <input type="number" formControlName="weight" min="1" aria-label="Currency weight"
+                        style="flex: 1; padding: 8px;" />
+                    <button type="button" (click)="removeCurrency($index)" [disabled]="currencyControls.length === 1"
+                        aria-label="Remove currency">Remove</button>
+                </div>
+                }
+                <button type="button" (click)="addCurrency()">Add currency</button>
+            </div>
+
+            <!-- Expiration Date -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Auction Ends At *</label>
+                <input type="datetime-local" formControlName="end_time"
+                    style="width: 100%; padding: 8px; box-sizing: border-box;" />
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" (click)="cancel()" [disabled]="isSubmitting()"
+                    style="padding: 8px 16px; cursor: pointer;">
+                    Cancel
+                </button>
+                <button type="submit" [disabled]="isSubmitting()"
+                    style="padding: 8px 16px; background: #5865F2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    {{ isSubmitting() ? 'Creating...' : 'Create Auction' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

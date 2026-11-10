@@ -1,6 +1,6 @@
 import { inject, Service } from '@angular/core';
 import { SupabaseService } from './supabase';
-import { IAuction, ICreateAuctionPayload } from '../types';
+import { DiscordGuild, IAuction, ICreateAuctionPayload } from '../types';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Service()
@@ -10,6 +10,23 @@ export class Auction {
 
     private get client() {
         return this.supabaseService.client;
+    }
+
+    async ensureGuild(guild: Pick<DiscordGuild, 'id' | 'name'>): Promise<void> {
+        const { error } = await this.client
+            .from('guilds')
+            .upsert(
+                {
+                    discord_guild_id: guild.id,
+                    guild_name: guild.name,
+                },
+                { onConflict: 'discord_guild_id' },
+            );
+
+        if (error) {
+            console.error(`Error saving Discord guild ${guild.id}:`, error);
+            throw error;
+        }
     }
 
     async getGuildAuctions(guildId: string): Promise<IAuction[]> {
@@ -49,7 +66,7 @@ export class Auction {
             .insert([
                 {
                     ...payload,
-                    created_by_discord_id: userDiscordId,
+                    seller_discord_id: userDiscordId,
                     status: 'ACTIVE'
                 }
             ])
@@ -67,7 +84,7 @@ export class Auction {
     async endAuction(auctionId: string): Promise<void> {
         const { error } = await this.client
             .from('auctions')
-            .update({ status: 'ENDED', updated_at: new Date().toISOString() })
+            .update({ status: 'ENDED' })
             .eq('id', auctionId);
 
         if (error) {

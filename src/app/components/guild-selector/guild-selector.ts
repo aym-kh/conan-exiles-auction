@@ -1,6 +1,7 @@
 import { Component, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
+import { Auction } from '../../services/auction';
 import { DiscordGuild } from '../../types';
 import { Router } from '@angular/router';
 
@@ -13,11 +14,13 @@ import { Router } from '@angular/router';
 export class GuildSelector implements OnInit {
 
   private readonly supabaseService = inject(SupabaseService);
+  private readonly auctionService = inject(Auction);
   private readonly router = inject(Router);
 
   private guilds = signal<DiscordGuild[]>([]);
   private selectedGuild = signal<DiscordGuild | null>(null);
   private isLoading = signal<boolean>(true);
+  protected errorMessage = signal<string | null>(null);
 
   @Output() guildSelected = new EventEmitter<DiscordGuild>();
 
@@ -30,8 +33,18 @@ export class GuildSelector implements OnInit {
     }
   }
 
-  protected selectGuild(guild: DiscordGuild) {
-    this.router.navigate(['/guilds', guild.id]);
+  protected async selectGuild(guild: DiscordGuild) {
+    this.errorMessage.set(null);
+    this.selectedGuild.set(guild);
+
+    try {
+      await this.auctionService.ensureGuild(guild);
+      await this.router.navigate(['/guilds', guild.id]);
+    } catch (error) {
+      console.error('Failed to save selected Discord server:', error);
+      this.errorMessage.set('Could not save this server. Please try again.');
+      this.selectedGuild.set(null);
+    }
   }
 
   protected getGuildIcon(guild: DiscordGuild): string {

@@ -2,9 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, Input, signal } from '@angular/core';
 import { Auction } from '../../services/auction';
 import { IAuction } from '../../types';
+import { AuctionForm } from '../auction-form/auction-form';
 
 @Component({
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    AuctionForm,
+  ],
   selector: 'app-guild-dashboard',
   styleUrl: './guild-dashboard.css',
   templateUrl: './guild-dashboard.html',
@@ -16,6 +20,7 @@ export class GuildDashboard {
 
   auctions = signal<IAuction[]>([]);
   isLoading = signal<boolean>(true);
+  showCreateModal = signal<boolean>(false);
 
   async ngOnInit() {
     if (this.guildId) await this.loadAuctions();
@@ -29,5 +34,10 @@ export class GuildDashboard {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  onAuctionCreated() {
+    this.showCreateModal.set(false);
+    this.loadAuctions();
   }
 }
