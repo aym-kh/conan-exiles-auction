@@ -3,11 +3,13 @@ import { Component, inject, Input, signal } from '@angular/core';
 import { Auction } from '../../services/auction';
 import { IAuction } from '../../types';
 import { AuctionForm } from '../auction-form/auction-form';
+import { RouterLink } from '@angular/router';
 
 @Component({
   imports: [
     CommonModule,
     AuctionForm,
+    RouterLink,
   ],
   selector: 'app-guild-dashboard',
   styleUrl: './guild-dashboard.css',

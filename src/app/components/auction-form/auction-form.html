@@ -2,7 +2,7 @@
     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;">
     <div
         style="background: #fff; border-radius: 8px; padding: 24px; width: 100%; max-width: 500px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        <h2 style="margin-top: 0;">Create New Auction</h2>
+        <h2 style="margin-top: 0;">{{ auction ? 'Edit Auction' : 'Create New Auction' }}</h2>
 
         @if (errorMessage()) {
         <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 12px;">
@@ -61,7 +61,7 @@
                 </button>
                 <button type="submit" [disabled]="isSubmitting()"
                     style="padding: 8px 16px; background: #5865F2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-                    {{ isSubmitting() ? 'Creating...' : 'Create Auction' }}
+                    {{ isSubmitting() ? 'Saving...' : auction ? 'Save Changes' : 'Create Auction' }}
                 </button>
             </div>
         </form>

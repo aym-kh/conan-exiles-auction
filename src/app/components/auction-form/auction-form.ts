@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, output, signal } from '@angular/core';
+import { Component, inject, Input, OnInit, output, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
-import { IAuctionCurrency, ICreateAuctionPayload } from '../../types';
+import { IAuction, IAuctionCurrency, ICreateAuctionPayload } from '../../types';
 
 @Component({
   imports: [
@@ -14,15 +14,17 @@ import { IAuctionCurrency, ICreateAuctionPayload } from '../../types';
   styleUrl: './auction-form.css',
   templateUrl: './auction-form.html',
 })
-export class AuctionForm {
+export class AuctionForm implements OnInit {
 
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly auctionService = inject(Auction);
   private readonly supabaseService = inject(SupabaseService);
 
   @Input({ required: true }) guildId!: string;
+  @Input() auction: IAuction | null = null;
 
   auctionCreated = output<void>();
+  auctionUpdated = output<void>();
   closeModal = output<void>();
   isSubmitting = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
@@ -39,6 +41,33 @@ export class AuctionForm {
     currencies: this.fb.array([this.createCurrencyGroup()]),
     end_time: [this.defaultEndTime(), [Validators.required]],
   });
+
+  ngOnInit() {
+    if (!this.auction) {
+      return;
+    }
+
+    this.form.patchValue({
+      title: this.auction.title,
+      description: this.auction.description ?? '',
+      is_blind: this.auction.is_blind ?? false,
+      end_time: this.toLocalDateTimeInput(this.auction.end_time),
+    });
+
+    this.currencyControls.clear();
+    for (const currency of this.auction.currencies) {
+      this.currencyControls.push(this.fb.group({
+        symbol: [currency.symbol, [Validators.required]],
+        weight: [currency.weight, [Validators.required, Validators.min(1)]],
+      }));
+    }
+  }
+
+  private toLocalDateTimeInput(value: string): string {
+    const date = new Date(value);
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+  }
 
   get currencyControls(): FormArray {
     return this.form.controls.currencies;
@@ -83,8 +112,7 @@ export class AuctionForm {
         weight: currency.weight,
       }));
 
-      const payload: ICreateAuctionPayload = {
-        guild_id: this.guildId,
+      const auctionFields = {
         title: formValues.title.trim(),
         description: formValues.description.trim() || null,
         is_blind: formValues.is_blind,
@@ -92,11 +120,20 @@ export class AuctionForm {
         end_time: new Date(formValues.end_time).toISOString(),
       };
 
-      await this.auctionService.createAuction(payload, currentUser.id);
-      this.auctionCreated.emit();
-    } catch (err: any) {
+      if (this.auction) {
+        await this.auctionService.updateAuction(this.auction.id, auctionFields, currentUser.id);
+        this.auctionUpdated.emit();
+      } else {
+        const payload: ICreateAuctionPayload = {
+          guild_id: this.guildId,
+          ...auctionFields,
+        };
+        await this.auctionService.createAuction(payload, currentUser.id);
+        this.auctionCreated.emit();
+      }
+    } catch (err) {
       console.error('Failed to create auction:', err);
-      this.errorMessage.set(err.message || 'Failed to create auction. Please try again.');
+      this.errorMessage.set(err instanceof Error ? err.message : 'Failed to save auction. Please try again.');
     } finally {
       this.isSubmitting.set(false);
     }

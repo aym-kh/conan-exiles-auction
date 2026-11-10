@@ -35,3 +35,8 @@ export interface ICreateAuctionPayload {
     currencies: IAuctionCurrency[];
     end_time: string;
 }
+
+export type IUpdateAuctionPayload = Pick<
+    ICreateAuctionPayload,
+    'title' | 'description' | 'is_blind' | 'currencies' | 'end_time'
+>;

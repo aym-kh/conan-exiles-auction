@@ -27,7 +27,8 @@
     } @else {
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
         @for (auction of auctions(); track auction.id) {
-        <div style="border: 1px solid #ccc; border-radius: 8px; padding: 16px; background: #fff;">
+        <a [routerLink]="['/auctions', auction.id]"
+            style="display: block; border: 1px solid #ccc; border-radius: 8px; padding: 16px; background: #fff; color: inherit; text-decoration: none;">
             <h3 style="margin: 12px 0 6px 0;">{{ auction.title }}</h3>
             <p style="color: #666; font-size: 14px;">{{ auction.description || 'No description provided.' }}</p>
 
@@ -43,7 +44,7 @@
             <small style="color: #888; display: block; margin-top: 6px;">
                 Ends: {{ auction.end_time | date:'short' }}
             </small>
-        </div>
+        </a>
         }
     </div>
     }

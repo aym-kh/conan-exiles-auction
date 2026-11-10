@@ -43,8 +43,11 @@ export class SupabaseService {
     }
 
     async getCurrentUser(): Promise<User | null> {
-        const { data: { user } } = await this.supabase.auth.getUser();
-        return user;
+        const { data, error } = await this.supabase.auth.getSession();
+        if (error) {
+            throw error;
+        }
+        return data.session?.user ?? null;
     }
 
     getClient(): SupabaseClient {

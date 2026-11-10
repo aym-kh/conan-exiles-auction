@@ -1,6 +1,6 @@
 import { inject, Service } from '@angular/core';
 import { SupabaseService } from './supabase';
-import { DiscordGuild, IAuction, ICreateAuctionPayload } from '../types';
+import { DiscordGuild, IAuction, ICreateAuctionPayload, IUpdateAuctionPayload } from '../types';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Service()
@@ -53,11 +53,54 @@ export class Auction {
             .single();
 
         if (error) {
+            if (error.code === 'PGRST116') {
+                return null;
+            }
             console.error(`Error fetching auction ${auctionId}:`, error);
-            return null;
+            throw error;
         }
 
         return data;
+    }
+
+    async updateAuction(
+        auctionId: string,
+        payload: IUpdateAuctionPayload,
+        userId: string,
+    ): Promise<IAuction> {
+        const { data, error } = await this.client
+            .from('auctions')
+            .update(payload)
+            .eq('id', auctionId)
+            .eq('seller_discord_id', userId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error(`Error updating auction ${auctionId}:`, error);
+            throw error;
+        }
+
+        return data;
+    }
+
+    async deleteAuction(auctionId: string, userId: string): Promise<void> {
+        const { data, error } = await this.client
+            .from('auctions')
+            .delete()
+            .eq('id', auctionId)
+            .eq('seller_discord_id', userId)
+            .select('id')
+            .single();
+
+        if (error) {
+            console.error(`Error deleting auction ${auctionId}:`, error);
+            throw error;
+        }
+
+        if (!data) {
+            throw new Error('Auction was not deleted. It may no longer exist or you may not own it.');
+        }
     }
 
     async createAuction(payload: ICreateAuctionPayload, userDiscordId: string): Promise<IAuction> {
