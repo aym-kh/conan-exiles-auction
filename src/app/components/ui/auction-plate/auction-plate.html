@@ -10,7 +10,7 @@
 
         <div class="auction-timer flex flex-col items-center justify-center gap-8">
             <div class="flex items-center gap-4">
-                <p class="text-5xl!">03:55:11</p>
+                <p class="text-5xl!" role="timer">{{ remainingTime() }}</p>
                 <img src="/images/timer.png" alt="timer-icon" class="w-5">
             </div>
             <small class="text-base!">Ends: {{ auction.end_time | date:'short' }}</small>
