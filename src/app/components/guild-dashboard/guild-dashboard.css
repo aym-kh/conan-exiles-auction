@@ -1,0 +1,5 @@
+#auctions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 400px);
+    gap: 1rem;
+}

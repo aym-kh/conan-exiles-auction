@@ -18,7 +18,7 @@
         <p>No active auctions for this server yet.</p>
     </div>
     } @else {
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+    <div id="auctions-grid">
         @for (auction of auctions(); track auction.id) {
         <app-auction-plate [auction]="auction" [routerLink]="['/auctions', auction.id]"></app-auction-plate>
         }
