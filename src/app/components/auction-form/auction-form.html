@@ -35,8 +35,12 @@
                 <label style="display: block; font-weight: bold; margin-bottom: 4px;">Currencies *</label>
                 @for (currency of currencyControls.controls; track $index) {
                 <div [formGroupName]="$index" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" formControlName="symbol" placeholder="Currency (e.g., Blood Crystals)"
-                        aria-label="Currency symbol" style="flex: 2; padding: 8px;" />
+                    <select formControlName="symbol" aria-label="Currency symbol" style="flex: 2; padding: 8px;">
+                        <option value="" disabled>Select currency</option>
+                        @for (currencyOption of auctionCurrencyOptions; track currencyOption.symbol) {
+                        <option [value]="currencyOption.symbol">{{ currencyOption.label }}</option>
+                        }
+                    </select>
                     <input type="number" formControlName="weight" min="1" aria-label="Currency weight"
                         style="flex: 1; padding: 8px;" />
                     <button type="button" (click)="removeCurrency($index)" [disabled]="currencyControls.length === 1"

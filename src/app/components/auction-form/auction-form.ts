@@ -3,7 +3,7 @@ import { Component, inject, Input, OnInit, output, signal } from '@angular/core'
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
-import { IAuction, IAuctionCurrency, ICreateAuctionPayload } from '../../types';
+import { AUCTION_CURRENCIES, IAuction, IAuctionCurrency, ICreateAuctionPayload } from '../../types';
 
 @Component({
   imports: [
@@ -28,6 +28,7 @@ export class AuctionForm implements OnInit {
   closeModal = output<void>();
   isSubmitting = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
+  readonly auctionCurrencyOptions = AUCTION_CURRENCIES;
   // Default end time: 24 hours from now (formatted for datetime-local input)
   private defaultEndTime(): string {
     const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
