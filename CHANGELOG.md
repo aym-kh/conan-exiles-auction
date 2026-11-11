@@ -11,6 +11,8 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-11
+
 ## [2.1.0] - 2026-11-11
 
 ### Changed
