@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { Button } from '../ui/button/button';
 import packageJson from '../../../../package.json';
@@ -15,6 +16,7 @@ import packageJson from '../../../../package.json';
   styleUrls: ['./login.css']
 })
 export class Login {
+  private readonly router = inject(Router);
   protected readonly supabaseService = inject(SupabaseService);
   protected readonly user$ = this.supabaseService.user$;
   protected readonly version = packageJson.version;
@@ -29,5 +31,6 @@ export class Login {
 
   async logout() {
     await this.supabaseService.signOut();
+    await this.router.navigateByUrl('/');
   }
 }

@@ -1,14 +1,14 @@
 import { Component, inject } from '@angular/core';
-import { SupabaseService } from './services/supabase';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { Button } from './components/ui/button/button';
 import { Login } from './components/login/login';
+import { SupabaseService } from './services/supabase';
 
 @Component({
   imports: [
+    CommonModule,
     RouterOutlet,
     Login,
-    Button,
   ],
   selector: 'app-root',
   styleUrl: './app.css',
@@ -16,5 +16,5 @@ import { Login } from './components/login/login';
 })
 export class App {
   protected readonly supabaseService = inject(SupabaseService);
-
+  protected readonly user$ = this.supabaseService.user$;
 }
