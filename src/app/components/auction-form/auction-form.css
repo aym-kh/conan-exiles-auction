@@ -1,0 +1,197 @@
+.auction-form-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgb(0 0 0 / 75%);
+    overflow-y: auto;
+}
+
+.auction-form-plate {
+    position: relative;
+    width: min(720px, 100%);
+    max-height: 100%;
+    overflow-y: auto;
+    border: 1px solid #9a7648;
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 80%);
+}
+
+.plate-background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+.plate-content {
+    position: relative;
+    padding: clamp(1.25rem, 4vw, 2rem);
+    background: rgb(19 15 12 / 42%);
+}
+
+.form-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-header img {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+}
+
+.form-header h2 {
+    color: #e7c79c;
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
+}
+
+.form-field {
+    display: grid;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.form-field > span,
+.field-heading {
+    color: #e7c79c;
+    font-weight: 700;
+}
+
+.form-field input,
+.form-field textarea,
+.currency-row input,
+.currency-row select {
+    width: 100%;
+    min-width: 0;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #826843;
+    border-radius: 4px;
+    background: rgb(13 11 9 / 88%);
+    color: #f0dfc5;
+    text-shadow: none;
+}
+
+.form-field textarea {
+    resize: vertical;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.currency-row input:focus,
+.currency-row select:focus {
+    outline: 2px solid #c69b5a;
+    outline-offset: 1px;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+    color: #b7a58d;
+}
+
+.blind-auction {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 1.25rem;
+}
+
+.blind-auction input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #b88d51;
+}
+
+.currency-fields {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.currency-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(80px, 1fr) auto;
+    gap: 0.5rem;
+}
+
+.plate-button {
+    position: relative;
+    min-height: 42px;
+    padding: 0.45rem 1rem;
+    border: 1px solid #967448;
+    border-radius: 5px;
+    background: linear-gradient(#473b2c, #211b15);
+    color: #f0d7ae;
+    cursor: pointer;
+    text-shadow: 1px 1px 2px #000;
+    transition: filter 180ms ease, transform 180ms ease;
+}
+
+.plate-button:hover:not(:disabled) {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
+}
+
+.plate-button:focus-visible {
+    outline: 2px solid #e7c79c;
+    outline-offset: 2px;
+}
+
+.plate-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.secondary-button {
+    justify-self: start;
+}
+
+.primary-button {
+    min-width: 150px;
+    background: linear-gradient(#78603d, #382a19);
+}
+
+.remove-button {
+    min-width: 88px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.form-error {
+    margin-bottom: 1rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid #9e4c40;
+    border-radius: 4px;
+    background: rgb(74 25 20 / 85%);
+    color: #ffd1c9;
+}
+
+@media (max-width: 520px) {
+    .auction-form-backdrop {
+        padding: 0.5rem;
+    }
+
+    .currency-row {
+        grid-template-columns: minmax(0, 1fr) 78px;
+    }
+
+    .remove-button {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+
+    .form-actions {
+        flex-wrap: wrap;
+    }
+}

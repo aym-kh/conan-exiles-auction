@@ -1,73 +1,72 @@
-<div
-    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-    <div
-        style="background: #fff; border-radius: 8px; padding: 24px; width: 100%; max-width: 500px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        <h2 style="margin-top: 0;">{{ auction ? 'Edit Auction' : 'Create New Auction' }}</h2>
+<div class="auction-form-backdrop">
+    <section class="auction-form-plate" role="dialog" aria-modal="true"
+        [attr.aria-label]="auction ? 'Edit auction' : 'Create auction'">
+        <img class="plate-background" src="/images/auction-plate.png" alt="" aria-hidden="true">
+        <div class="plate-content">
+            <header class="form-header">
+                <img src="/images/treasure.png" alt="" aria-hidden="true">
+                <h2>{{ auction ? 'Edit Auction' : 'Create New Auction' }}</h2>
+            </header>
 
-        @if (errorMessage()) {
-        <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 12px;">
-            {{ errorMessage() }}
-        </div>
-        }
+            @if (errorMessage()) {
+            <p class="form-error" role="alert">{{ errorMessage() }}</p>
+            }
 
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <!-- Auction title -->
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Title *</label>
-                <input type="text" formControlName="title" placeholder="e.g., Sword of Crom"
-                    style="width: 100%; padding: 8px; box-sizing: border-box;" />
-            </div>
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <label class="form-field">
+                    <span>Title *</span>
+                    <input type="text" formControlName="title" placeholder="e.g., Sword of Crom" />
+                </label>
 
-            <!-- Description -->
-            <div style="margin-bottom: 12px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Description</label>
-                <textarea formControlName="description" rows="3" placeholder="Flawless high-grade weapons, stats, etc."
-                    style="width: 100%; padding: 8px; box-sizing: border-box;"></textarea>
-            </div>
+                <label class="form-field">
+                    <span>Description</span>
+                    <textarea formControlName="description" rows="3"
+                        placeholder="Flawless high-grade weapons, stats, etc."></textarea>
+                </label>
 
-            <label style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
-                <input type="checkbox" formControlName="is_blind" />
-                Blind auction
-            </label>
+                <label class="blind-auction">
+                    <input type="checkbox" formControlName="is_blind" />
+                    <span>Blind auction</span>
+                </label>
 
-            <!-- Auction currencies and normalized weights -->
-            <div formArrayName="currencies" style="margin-bottom: 12px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Currencies *</label>
-                @for (currency of currencyControls.controls; track $index) {
-                <div [formGroupName]="$index" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <select formControlName="symbol" aria-label="Currency symbol" style="flex: 2; padding: 8px;">
-                        <option value="" disabled>Select currency</option>
-                        @for (currencyOption of auctionCurrencyOptions; track currencyOption.symbol) {
-                        <option [value]="currencyOption.symbol">{{ currencyOption.label }}</option>
-                        }
-                    </select>
-                    <input type="number" formControlName="weight" min="1" aria-label="Currency weight"
-                        style="flex: 1; padding: 8px;" />
-                    <button type="button" (click)="removeCurrency($index)" [disabled]="currencyControls.length === 1"
-                        aria-label="Remove currency">Remove</button>
+                <div class="currency-fields" formArrayName="currencies">
+                    <span class="field-heading">Currencies *</span>
+                    @for (currency of currencyControls.controls; track $index) {
+                    <div class="currency-row" [formGroupName]="$index">
+                        <select formControlName="symbol" [attr.aria-label]="'Currency ' + ($index + 1)">
+                            <option value="" disabled>Select currency</option>
+                            @for (currencyOption of auctionCurrencyOptions; track currencyOption.symbol) {
+                            <option [value]="currencyOption.symbol">{{ currencyOption.label }}</option>
+                            }
+                        </select>
+                        <input type="number" formControlName="weight" min="1"
+                            [attr.aria-label]="'Currency weight ' + ($index + 1)" />
+                        <button class="plate-button remove-button" type="button" (click)="removeCurrency($index)"
+                            [disabled]="currencyControls.length === 1">
+                            Remove
+                        </button>
+                    </div>
+                    }
+                    <button class="plate-button secondary-button" type="button" (click)="addCurrency()">
+                        Add currency
+                    </button>
                 </div>
-                }
-                <button type="button" (click)="addCurrency()">Add currency</button>
-            </div>
 
-            <!-- Expiration Date -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 4px;">Auction Ends At *</label>
-                <input type="datetime-local" formControlName="end_time"
-                    style="width: 100%; padding: 8px; box-sizing: border-box;" />
-            </div>
+                <label class="form-field">
+                    <span>Auction Ends At *</span>
+                    <input type="datetime-local" formControlName="end_time" />
+                </label>
 
-            <!-- Actions -->
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" (click)="cancel()" [disabled]="isSubmitting()"
-                    style="padding: 8px 16px; cursor: pointer;">
-                    Cancel
-                </button>
-                <button type="submit" [disabled]="isSubmitting()"
-                    style="padding: 8px 16px; background: #5865F2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-                    {{ isSubmitting() ? 'Saving...' : auction ? 'Save Changes' : 'Create Auction' }}
-                </button>
-            </div>
-        </form>
-    </div>
+                <footer class="form-actions">
+                    <button class="plate-button secondary-button" type="button" (click)="cancel()"
+                        [disabled]="isSubmitting()">
+                        Cancel
+                    </button>
+                    <button class="plate-button primary-button" type="submit" [disabled]="isSubmitting()">
+                        {{ isSubmitting() ? 'Saving...' : auction ? 'Save Changes' : 'Create Auction' }}
+                    </button>
+                </footer>
+            </form>
+        </div>
+    </section>
 </div>
