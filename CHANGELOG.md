@@ -11,6 +11,8 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-11
+
 ### Added
 - A live auction countdown and currency icons with weights on auction details.
 - Sign-in protection for guild and auction routes.
