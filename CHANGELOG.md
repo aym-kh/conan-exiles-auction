@@ -11,6 +11,18 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+### Added
+- A live auction countdown and currency icons with weights on auction details.
+- Sign-in protection for guild and auction routes.
+
+### Changed
+- Centralized the supported auction currencies and used fixed currency options in the auction form.
+- Updated auction creation, bid controls, and the page background with a consistent dark, gold-accented UI.
+
+### Fixed
+- Prevented the login view from appearing twice after signing out.
+- Mapped legacy currency names to their icon filenames.
+
 ## [1.1.0] - 2026-11-10
 
 ## [1.0.0] - 2026-11-10
