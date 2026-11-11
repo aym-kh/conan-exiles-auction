@@ -1,3 +1,39 @@
 :host {
   display: block;
 }
+
+.auction-summary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 20px;
+}
+
+.currencies-plate {
+  position: relative;
+  width: 380px;
+  min-height: 296px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.currencies-plate-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+
+@media (max-width: 420px) {
+  .currencies-plate {
+    width: 100%;
+    padding: 2rem 1.5rem;
+  }
+}

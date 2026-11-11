@@ -5,11 +5,17 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
-import { IAuction, IAuctionBid } from '../../types';
+import { AUCTION_CURRENCIES, IAuction, IAuctionBid } from '../../types';
 import { AuctionForm } from '../auction-form/auction-form';
+import { AuctionPlate } from '../ui/auction-plate/auction-plate';
 
 @Component({
-  imports: [CommonModule, ReactiveFormsModule, AuctionForm],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    AuctionForm,
+    AuctionPlate,
+  ],
   selector: 'app-auction-detail',
   styleUrl: './auction-detail.css',
   templateUrl: './auction-detail.html',
@@ -35,20 +41,36 @@ export class AuctionDetail implements OnInit, OnDestroy {
   protected readonly showEditModal = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly bidError = signal<string | null>(null);
+
+  async ngOnInit() {
+    this.expirationTimer = setInterval(() => this.now.set(Date.now()), 1000);
+    await this.loadAuction();
+  }
+
+  protected currencyIconPath(currencySymbol: string): string {
+    const normalizedSymbol = currencySymbol.trim().toLowerCase().replace(/[\s-]+/g, '_');
+    const symbol = normalizedSymbol === 'blood_crystals' ? 'blood_crystal' : normalizedSymbol;
+    const currency = AUCTION_CURRENCIES.find((option) => option.symbol === symbol);
+    return `/images/currencies/${currency?.symbol ?? symbol}.png`;
+  }
+
   protected readonly isAuctionExpired = computed(() => {
     const auction = this.auction();
     return !!auction && new Date(auction.end_time).getTime() <= this.now();
   });
+
   protected readonly bidForm = this.fb.group({
     currencySymbol: ['', Validators.required],
     amount: [1, [Validators.required, Validators.min(1), Validators.max(2147483647), Validators.pattern(/^\d+$/)]],
   });
+
   protected readonly currentHighestBid = computed(() =>
     this.bids().reduce<IAuctionBid | null>(
       (highest, bid) => !highest || bid.calculated_weight > highest.calculated_weight ? bid : highest,
       null,
     ),
   );
+
   protected readonly canBid = computed(() => {
     const auction = this.auction();
     const userId = this.currentUserId();
@@ -58,20 +80,6 @@ export class AuctionDetail implements OnInit, OnDestroy {
       && auction.status === 'ACTIVE'
       && new Date(auction.end_time).getTime() > this.now();
   });
-
-  async ngOnInit() {
-    this.expirationTimer = setInterval(() => this.now.set(Date.now()), 1000);
-    await this.loadAuction();
-  }
-
-  ngOnDestroy() {
-    if (this.expirationTimer) {
-      clearInterval(this.expirationTimer);
-    }
-    if (this.bidsChannel) {
-      void this.supabaseService.client.removeChannel(this.bidsChannel);
-    }
-  }
 
   private async loadAuction() {
     const auctionId = this.route.snapshot.paramMap.get('auctionId');
@@ -185,6 +193,15 @@ export class AuctionDetail implements OnInit, OnDestroy {
       void this.router.navigate(['/guilds', guildId]);
     } else {
       void this.router.navigate(['/guilds']);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.expirationTimer) {
+      clearInterval(this.expirationTimer);
+    }
+    if (this.bidsChannel) {
+      void this.supabaseService.client.removeChannel(this.bidsChannel);
     }
   }
 }
