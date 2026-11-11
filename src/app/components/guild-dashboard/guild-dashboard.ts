@@ -4,12 +4,16 @@ import { Auction } from '../../services/auction';
 import { IAuction } from '../../types';
 import { AuctionForm } from '../auction-form/auction-form';
 import { RouterLink } from '@angular/router';
+import { Button } from '../ui/button/button';
+import { AuctionPlate } from '../ui/auction-plate/auction-plate';
 
 @Component({
   imports: [
     CommonModule,
     AuctionForm,
     RouterLink,
+    Button,
+    AuctionPlate,
   ],
   selector: 'app-guild-dashboard',
   styleUrl: './guild-dashboard.css',

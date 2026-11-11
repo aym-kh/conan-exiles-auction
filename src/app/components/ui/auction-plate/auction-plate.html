@@ -1,0 +1,22 @@
+<div class="auction-plate shadow-xl">
+    <div class="auction-plate-content">
+        <div class="auction-header">
+            <img src="/images/treasure.png" alt="treasure icon" class="auction-icon shadow-2xl">
+            <div>
+                <h3>{{ auction.title }}</h3>
+                <small class="text-sm!">{{ auction.description || 'No description provided.' }}</small>
+            </div>
+        </div>
+
+        <div class="auction-timer flex flex-col items-center justify-center gap-8">
+            <div class="flex items-center gap-4">
+                <p class="text-5xl!">03:55:11</p>
+                <img src="/images/timer.png" alt="timer-icon" class="w-5">
+            </div>
+            <small class="text-base!">Ends: {{ auction.end_time | date:'short' }}</small>
+        </div>
+
+    </div>
+
+    <img src="/images/auction-plate.png" alt="" class="auction-bg">
+</div>

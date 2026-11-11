@@ -3,7 +3,7 @@
 @import 'tailwindcss';
 
 :root {
-    --exile-font: 'Caesar Dressing', 'Book Antiqua', Palatino, serif;
+    --exile-font: 'Cinzel Decorative', 'Book Antiqua', Palatino, serif;
     --exile-text: #E7C79C;
     --exile-text-2: #73A8B2;
 }
@@ -18,7 +18,7 @@
     color: var(--exile-text);
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     /* 1. Define the stroke width and color */
-    -webkit-text-stroke: 1px black;
+    /* -webkit-text-stroke: 1px black; */
     /* 2. Force the stroke to render behind the fill */
-    paint-order: stroke fill;
+    /* paint-order: stroke fill; */
 }

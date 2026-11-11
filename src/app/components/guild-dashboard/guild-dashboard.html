@@ -5,10 +5,7 @@
             <p>Guild ID: <code>{{ guildId }}</code></p>
         </div>
         <div style="display: flex; gap: 8px;">
-            <button (click)="showCreateModal.set(true)"
-                style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
-                + Create Auction
-            </button>
+            <app-button [text]="'Create'" (click)="showCreateModal.set(true)"></app-button>
             <button (click)="loadAuctions()" style="padding: 8px 16px; cursor: pointer;">
                 Refresh
             </button>
@@ -27,24 +24,7 @@
     } @else {
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
         @for (auction of auctions(); track auction.id) {
-        <a [routerLink]="['/auctions', auction.id]"
-            style="display: block; border: 1px solid #ccc; border-radius: 8px; padding: 16px; background: #fff; color: inherit; text-decoration: none;">
-            <h3 style="margin: 12px 0 6px 0;">{{ auction.title }}</h3>
-            <p style="color: #666; font-size: 14px;">{{ auction.description || 'No description provided.' }}</p>
-
-            <div style="margin-top: 12px; font-weight: bold;">
-                @for (currency of auction.currencies; track currency.symbol) {
-                <span>{{ currency.symbol }} × {{ currency.weight }}@if (!$last) {, }</span>
-                }
-            </div>
-            @if (auction.is_blind) {
-            <p>Blind auction</p>
-            }
-
-            <small style="color: #888; display: block; margin-top: 6px;">
-                Ends: {{ auction.end_time | date:'short' }}
-            </small>
-        </a>
+        <app-auction-plate [auction]="auction" [routerLink]="['/auctions', auction.id]"></app-auction-plate>
         }
     </div>
     }
