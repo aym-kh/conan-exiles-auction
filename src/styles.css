@@ -4,21 +4,42 @@
 
 :root {
     --exile-font: 'Cinzel Decorative', 'Book Antiqua', Palatino, serif;
-    --exile-text: #E7C79C;
-    --exile-text-2: #73A8B2;
+    --exile-text: #e7c79c;
+    --exile-text-bright: #f0dfc5;
+    --exile-text-button: #f0d7ae;
+    --exile-text-muted: #b7a58d;
+    --exile-text-error: #ffd1c9;
+    --exile-text-2: #73a8b2;
+
+    --exile-black-rgb: 0 0 0;
+    --exile-bg-rgb: 13 11 9;
+    --exile-panel-rgb: 19 15 12;
+    --exile-error-bg-rgb: 74 25 20;
+    --exile-background-tint-top: rgba(18, 31, 39, 0.5);
+    --exile-background-tint-bottom: rgba(10, 22, 29, 0.7);
+
+    --exile-border: #967448;
+    --exile-border-form: #9a7648;
+    --exile-border-field: #826843;
+    --exile-border-focus: #c69b5a;
+    --exile-border-error: #9e4c40;
+    --exile-accent: #b88d51;
+
+    --exile-button-top: #473b2c;
+    --exile-button-bottom: #211b15;
+    --exile-button-primary-top: #78603d;
+    --exile-button-primary-bottom: #382a19;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    line-height: 1.5;
-    font-size: 1rem;
-    font-family: var(--exile-font);
-    color: var(--exile-text);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    /* 1. Define the stroke width and color */
-    /* -webkit-text-stroke: 1px black; */
-    /* 2. Force the stroke to render behind the fill */
-    /* paint-order: stroke fill; */
+@layer base {
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        line-height: 1.5;
+        font-size: 1rem;
+        font-family: var(--exile-font);
+        color: var(--exile-text);
+        text-shadow: 2px 2px 4px rgb(var(--exile-black-rgb) / 50%);
+    }
 }
