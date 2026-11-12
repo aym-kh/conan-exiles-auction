@@ -1,13 +1,11 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { parseLatestChangelogRelease } from '../../../utils/changelog';
 import { Button } from '../button/button';
-import { RouterLink } from '@angular/router';
 import { ChangelogRelease } from '../../../types';
 
 @Component({
   imports: [
     Button,
-    RouterLink,
   ],
   selector: 'app-changeslog',
   styleUrl: './changeslog.css',
