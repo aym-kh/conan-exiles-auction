@@ -5,7 +5,11 @@
     </video>
 
     @if (loadingService.isLoading()) {
-    <div class="global-loading shadow-2xl" role="status" aria-live="polite">Loading...</div>
+    <div class="fixed top-0 left-0 w-full h-full z-10 flex items-center justify-center" role="status"
+        aria-live="polite">
+        <div class="absolute top-0 left-0 w-full h-full bg-black/70 backdrop-blur-xs"></div>
+        <img src="/images/loading.webp" alt="loadinfg-screen" class="w-sm pointer-events-none z-20">
+    </div>
     }
 
     <div id="layoutContainer" class="flex flex-col gap-4">

@@ -35,16 +35,3 @@
     filter: grayscale();
     /* filter: brightness(0.3); */
 }
-
-.global-loading {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    z-index: 3;
-    padding: 1rem 2rem;
-    border: 1px solid var(--exile-border);
-    border-radius: .5rem;
-    background: rgb(var(--exile-panel-rgb) / 95%);
-    color: var(--exile-text);
-    transform: translate(-50%, -50%);
-}
