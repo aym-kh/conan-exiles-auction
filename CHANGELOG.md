@@ -11,6 +11,8 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-11-12
+
 ### Added
 - Discord server member and presence counts, plus server feature indicators in the server details panel.
 - Live countdowns in the guild dashboard's auction list.
