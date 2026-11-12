@@ -62,3 +62,14 @@ export interface IAuctionBid {
     calculated_weight: number;
     created_at: string;
 }
+
+export interface ChangelogSection {
+    title: string;
+    items: string[];
+}
+
+export interface ChangelogRelease {
+    version: string;
+    date: string;
+    sections: ChangelogSection[];
+}

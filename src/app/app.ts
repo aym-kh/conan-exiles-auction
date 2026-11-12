@@ -4,12 +4,14 @@ import { RouterOutlet } from '@angular/router';
 import { Login } from './components/login/login';
 import { LoadingService } from './services/loading';
 import { SupabaseService } from './services/supabase';
+import { Changeslog } from './components/ui/changeslog/changeslog';
 
 @Component({
   imports: [
     CommonModule,
     RouterOutlet,
     Login,
+    Changeslog,
   ],
   selector: 'app-root',
   styleUrl: './app.css',

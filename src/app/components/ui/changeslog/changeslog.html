@@ -1,0 +1,31 @@
+<section class="fixed bottom-4 right-4 max-w-125" aria-labelledby="whatsNewTitle">
+    <div class="relative">
+        <div class="z-10 relative p-1 space-y-4">
+            <header class="flex items-center justify-between">
+                <h2 class="text-(--exile-text-bright)">What's New?</h2>
+                <app-button [text]="'view full changelog'" (click)="navigateToFullChangelog()"></app-button>
+            </header>
+
+            @if (isChangelogLoading()) {
+            <p role="status">Loading release notes...</p>
+            } @else if (changelogError()) {
+            <p class="whats-new-error" role="alert">{{ changelogError() }}</p>
+            } @else if (latestRelease(); as release) {
+            <small class="text-(--exile-text-2)">Version {{ release.version }} · {{ release.date }}</small>
+            @for (section of release.sections; track section.title) {
+            <section class="text-sm! font-extralight tracking-tight">
+                <h3 class="text-(--exile-text-2)">{{ section.title }}</h3>
+                <ul class="flex flex-col gap-2 list-disc">
+                    @for (item of section.items; track $index) {
+                    <li class="text-sm">{{ item }}</li>
+                    }
+                </ul>
+            </section>
+            }
+            } @else {
+            <p>No release notes are available yet.</p>
+            }
+        </div>
+        <div class="absolute top-0 left-0 w-full h-full bg-black/10 blur-xl"></div>
+    </div>
+</section>
