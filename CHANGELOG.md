@@ -11,7 +11,14 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
-## [2.0.1] - 2026-11-11
+### Added
+- Discord server member and presence counts, plus server feature indicators in the server details panel.
+- Live countdowns in the guild dashboard's auction list.
+
+### Changed
+- Reworked server selection, the guild dashboard, and auction details into game-inspired split views.
+- Applied the reusable slate, gold-frame, and stone-grain theme to the updated panels and auction form, removing their previous imagery.
+- Show the guest welcome section only when the user is signed out.
 
 ## [2.1.0] - 2026-11-11
 
