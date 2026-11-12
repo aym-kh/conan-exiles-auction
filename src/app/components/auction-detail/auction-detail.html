@@ -7,10 +7,22 @@
   } @else if (auction(); as currentAuction) {
   <div class="auction-detail-layout">
     <section class="auction-info-panel" aria-labelledby="auction-title">
-      <header class="detail-panel-heading">
-        <span class="auction-status">{{ currentAuction.status ?? 'Unknown' }}</span>
-        <h2 id="auction-title">{{ currentAuction.title }}</h2>
+      <header class="flex items-center justify-between">
+        <div>
+          <small class="auction-status">{{ currentAuction.status ?? 'Unknown' }}</small>
+          <h2 class="text-2xl">{{ currentAuction.title }}</h2>
+        </div>
+
+        @if (isOwner()) {
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button type="button" class="bid-submit" [disabled]="isDeleting()" (click)="showEditModal.set(true)">Edit
+            auction</button>
+          <button type="button" class="bid-submit border-red-700! bg-red-950! text-red-300!" [disabled]="isDeleting()"
+            (click)="deleteAuction()">{{ isDeleting() ? 'Deleting...' : 'Delete auction' }}</button>
+        </div>
+        }
       </header>
+
 
       <p class="auction-description">
         {{ currentAuction.description || 'No description provided.' }}
@@ -88,7 +100,8 @@
           <select formControlName="currencySymbol" aria-label="Currency">
             <option value="" disabled>Select currency</option>
             @for (currency of currentAuction.currencies; track currency.symbol) {
-            <option [value]="currency.symbol">{{ currencyLabel(currency.symbol) }} (weight {{ currency.weight }})</option>
+            <option [value]="currency.symbol">{{ currencyLabel(currency.symbol) }} (weight {{ currency.weight }})
+            </option>
             }
           </select>
         </label>

@@ -71,22 +71,10 @@
   content: "";
 }
 
-.detail-panel-heading {
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgb(150 116 72 / 65%);
-}
-
-.detail-panel-heading h2 {
-  margin-top: 0.35rem;
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  overflow-wrap: anywhere;
-}
-
 .auction-status,
 .auction-facts dt,
 .currency-details h3,
-.highest-bid > span {
+.highest-bid>span {
   color: var(--detail-muted);
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -101,7 +89,7 @@
   margin-bottom: 1.5rem;
 }
 
-.auction-facts > div,
+.auction-facts>div,
 .currency-row {
   display: flex;
   justify-content: space-between;
@@ -129,10 +117,6 @@
 .bids-panel {
   display: flex;
   flex-direction: column;
-}
-
-.bids-panel > .detail-panel-heading h2 {
-  margin: 0;
 }
 
 .highest-bid {
@@ -200,7 +184,7 @@
   min-width: 0;
 }
 
-.bid-field > span {
+.bid-field>span {
   color: var(--detail-muted);
   font-size: 0.85rem;
 }
