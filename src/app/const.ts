@@ -1,3 +1,11 @@
+export const AUCTION_CURRENCIES = [
+    { symbol: 'blood_crystal', label: 'Blood Crystals' },
+    { symbol: 'eldarium', label: 'Eldarium' },
+    { symbol: 'fragment_of_power', label: 'Fragment of Power' },
+    { symbol: 'gold_coin', label: 'Gold Coin' },
+    { symbol: 'gold_bar', label: 'Gold Bar' },
+] as const;
+
 export const SERVER_FEATURE_LABELS = new Map([
     ['COMMUNITY', 'Community'],
     ['VERIFIED', 'Verified'],

@@ -2,13 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Auction } from '../../services/auction';
 import { LoadingService } from '../../services/loading';
-import { AUCTION_CURRENCIES, IAuction } from '../../types';
+import { IAuction } from '../../types';
 import { formatCountdown } from '../../utils/countdown';
 import { AuctionForm } from '../auction-form/auction-form';
 import { RouterLink } from '@angular/router';
 import { Button } from '../ui/button/button';
 import { Title } from '../ui/title/title';
-import { SCREEN_TITLES } from '../../const';
+import { AUCTION_CURRENCIES, SCREEN_TITLES } from '../../const';
 
 @Component({
   imports: [

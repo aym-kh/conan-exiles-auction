@@ -6,9 +6,10 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
 import { LoadingService } from '../../services/loading';
-import { AUCTION_CURRENCIES, IAuction, IAuctionBid } from '../../types';
+import { IAuction, IAuctionBid } from '../../types';
 import { formatCountdown } from '../../utils/countdown';
 import { AuctionForm } from '../auction-form/auction-form';
+import { AUCTION_CURRENCIES } from '../../const';
 
 @Component({
   imports: [

@@ -3,7 +3,8 @@ import { Component, inject, Input, OnInit, output, signal } from '@angular/core'
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
-import { AUCTION_CURRENCIES, IAuction, IAuctionCurrency, ICreateAuctionPayload } from '../../types';
+import { IAuction, IAuctionCurrency, ICreateAuctionPayload } from '../../types';
+import { AUCTION_CURRENCIES } from '../../const';
 
 @Component({
   imports: [
