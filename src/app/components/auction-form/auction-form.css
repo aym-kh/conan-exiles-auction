@@ -12,39 +12,37 @@
 
 .auction-form-plate {
     position: relative;
+    isolation: isolate;
     width: min(720px, 100%);
     max-height: 100%;
     overflow-y: auto;
-    border: 1px solid var(--exile-border-form);
-    border-radius: 12px;
+    border: 3px solid transparent;
+    background:
+        radial-gradient(ellipse at center, #25292a 0%, #151819 100%) padding-box,
+        var(--exile-button-frame) border-box;
     box-shadow: 0 16px 48px rgb(var(--exile-black-rgb) / 80%);
 }
 
-.plate-background {
+.auction-form-plate::before {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
+    inset: 3px;
+    z-index: -1;
+    background: var(--exile-stone-grain);
+    mix-blend-mode: overlay;
+    opacity: 0.28;
+    pointer-events: none;
+    content: "";
 }
 
 .plate-content {
     position: relative;
     padding: clamp(1.25rem, 4vw, 2rem);
-    background: rgb(var(--exile-panel-rgb) / 42%);
 }
 
 .form-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
     margin-bottom: 1.5rem;
-}
-
-.form-header img {
-    width: 54px;
-    height: 54px;
-    object-fit: contain;
 }
 
 .form-header h2 {
@@ -72,7 +70,7 @@
     min-width: 0;
     padding: 0.65rem 0.75rem;
     border: 1px solid var(--exile-border-field);
-    border-radius: 4px;
+    border-radius: 2px;
     background: rgb(var(--exile-bg-rgb) / 88%);
     color: var(--exile-text-bright);
     text-shadow: none;
@@ -124,9 +122,10 @@
     position: relative;
     min-height: 42px;
     padding: 0.45rem 1rem;
-    border: 1px solid var(--exile-border);
-    border-radius: 5px;
-    background: linear-gradient(var(--exile-button-top), var(--exile-button-bottom));
+    border: 2px solid transparent;
+    background:
+        radial-gradient(ellipse at center, #25292a 0%, #151819 100%) padding-box,
+        var(--exile-button-frame) border-box;
     color: var(--exile-text-button);
     cursor: pointer;
     text-shadow: 1px 1px 2px rgb(var(--exile-black-rgb));
@@ -134,7 +133,7 @@
 }
 
 .plate-button:hover:not(:disabled) {
-    filter: brightness(1.2);
+    filter: brightness(1.18);
     transform: translateY(-1px);
 }
 
@@ -154,7 +153,6 @@
 
 .primary-button {
     min-width: 150px;
-    background: linear-gradient(var(--exile-button-primary-top), var(--exile-button-primary-bottom));
 }
 
 .remove-button {

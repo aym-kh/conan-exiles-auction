@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, OnDestroy, OnInit, signal, SimpleChanges } from '@angular/core';
 import { IAuction } from '../../../types';
+import { formatCountdown } from '../../../utils/countdown';
 
 @Component({
   imports: [
@@ -17,17 +18,7 @@ export class AuctionPlate implements OnChanges, OnInit, OnDestroy {
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
   protected readonly remainingTime = () => {
-    const endTime = Date.parse(this.auction.end_time);
-    const remainingSeconds = Number.isFinite(endTime)
-      ? Math.max(0, Math.floor((endTime - this.now()) / 1000))
-      : 0;
-    const hours = Math.floor(remainingSeconds / 3600);
-    const minutes = Math.floor((remainingSeconds % 3600) / 60);
-    const seconds = remainingSeconds % 60;
-
-    return [hours, minutes, seconds]
-      .map((value) => String(value).padStart(2, '0'))
-      .join(':');
+    return formatCountdown(this.auction.end_time, this.now());
   };
 
   ngOnChanges(_changes: SimpleChanges) {
