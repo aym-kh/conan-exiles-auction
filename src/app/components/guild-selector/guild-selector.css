@@ -43,6 +43,27 @@
     content: "";
 }
 
+.dashboard-header,
+.dashboard-actions,
+.panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.dashboard-header {
+    margin-bottom: 1.25rem;
+}
+
+.dashboard-header h2 {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.dashboard-header p {
+    color: var(--dashboard-muted);
+}
+
 .browser-heading {
     display: flex;
     align-items: flex-end;
@@ -132,7 +153,7 @@
     min-height: 100%;
 }
 
-.guild-details > h2 {
+.guild-details>h2 {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -143,8 +164,8 @@
     text-transform: uppercase;
 }
 
-.guild-details > h2::before,
-.guild-details > h2::after {
+.guild-details>h2::before,
+.guild-details>h2::after {
     width: 1.25rem;
     height: 1px;
     background: var(--guild-steel-highlight);
@@ -178,7 +199,7 @@
     text-align: left;
 }
 
-.guild-detail-content dl > div {
+.guild-detail-content dl>div {
     display: flex;
     justify-content: space-between;
     gap: 1rem;

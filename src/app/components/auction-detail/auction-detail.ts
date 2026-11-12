@@ -7,15 +7,14 @@ import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
 import { LoadingService } from '../../services/loading';
 import { AUCTION_CURRENCIES, IAuction, IAuctionBid } from '../../types';
+import { formatCountdown } from '../../utils/countdown';
 import { AuctionForm } from '../auction-form/auction-form';
-import { AuctionPlate } from '../ui/auction-plate/auction-plate';
 
 @Component({
   imports: [
     CommonModule,
     ReactiveFormsModule,
     AuctionForm,
-    AuctionPlate,
   ],
   selector: 'app-auction-detail',
   styleUrl: './auction-detail.css',
@@ -48,11 +47,12 @@ export class AuctionDetail implements OnInit, OnDestroy {
     await this.loadAuction();
   }
 
-  protected currencyIconPath(currencySymbol: string): string {
-    const normalizedSymbol = currencySymbol.trim().toLowerCase().replace(/[\s-]+/g, '_');
-    const symbol = normalizedSymbol === 'blood_crystals' ? 'blood_crystal' : normalizedSymbol;
-    const currency = AUCTION_CURRENCIES.find((option) => option.symbol === symbol);
-    return `/images/currencies/${currency?.symbol ?? symbol}.png`;
+  protected currencyLabel(currencySymbol: string): string {
+    return AUCTION_CURRENCIES.find((currency) => currency.symbol === currencySymbol)?.label ?? currencySymbol;
+  }
+
+  protected remainingTime(endTime: string): string {
+    return formatCountdown(endTime, this.now());
   }
 
   protected readonly isAuctionExpired = computed(() => {

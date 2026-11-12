@@ -1,96 +1,114 @@
-<main class="flex flex-col gap-12">
-  <button type="button" (click)="backToGuild()" class="w-fit border border-solid p-2! rounded-lg cursor-pointer">Back to
-    server
-    auctions</button>
+<main class="auction-detail-page">
+  <button type="button" class="back-button" (click)="backToGuild()">Back to server auctions</button>
 
   @if (!loadingService.isLoading()) {
   @if (errorMessage() && !auction()) {
-  <p role="alert">{{ errorMessage() }}</p>
+  <p class="detail-error" role="alert">{{ errorMessage() }}</p>
   } @else if (auction(); as currentAuction) {
+  <div class="auction-detail-layout">
+    <section class="auction-info-panel" aria-labelledby="auction-title">
+      <header class="detail-panel-heading">
+        <span class="auction-status">{{ currentAuction.status ?? 'Unknown' }}</span>
+        <h2 id="auction-title">{{ currentAuction.title }}</h2>
+      </header>
 
-  <div class="auction-summary">
-    <app-auction-plate [auction]="currentAuction"></app-auction-plate>
-    <section class="currencies-plate relatived" aria-label="Auction currencies">
-      <img class="currencies-plate-bg" src="/images/currencies_plate.png" alt="" aria-hidden="true">
-      <h2 class="absolute top-4 left-6">Currencies & Weight</h2>
-      <div class="absolute top-14 flex items-center gap-2">
-        @for (currency of currentAuction.currencies; track currency.symbol) {
-        <img [src]="currencyIconPath(currency.symbol)" [alt]="currency.symbol" class="w-12">
-        }
-      </div>
+      <p class="auction-description">
+        {{ currentAuction.description || 'No description provided.' }}
+      </p>
 
-      <div class="currencies-plate-content absolute top-30 left-8 flex flex-col gap-2 h-38 w-full">
+      <dl class="auction-facts">
+        <div>
+          <dt>Ends</dt>
+          <dd><time [attr.datetime]="currentAuction.end_time">{{ currentAuction.end_time | date:'medium' }}</time></dd>
+        </div>
+        <div>
+          <dt>Time Remaining</dt>
+          <dd class="remaining-time" role="timer">
+            {{ isAuctionExpired() ? 'Ended' : remainingTime(currentAuction.end_time) }}
+          </dd>
+        </div>
+        <div>
+          <dt>Auction Type</dt>
+          <dd>{{ currentAuction.is_blind ? 'Blind' : 'Open' }}</dd>
+        </div>
+      </dl>
+
+      <section class="currency-details" aria-labelledby="currency-title">
+        <h3 id="currency-title">Accepted Currencies</h3>
         @for (currency of currentAuction.currencies; track currency.symbol) {
-        <div class="currency-entry flex items-center justify-between w-full">
-          <div class="flex items-center gap-4">
-            <img [src]="currencyIconPath(currency.symbol)" [alt]="currency.symbol" class="w-8!">
-            <span class="text-sm!">{{ currency.symbol }}</span>
-          </div>
-          <small class="pr-24!">&times;{{currency.weight}}</small>
+        <div class="currency-row">
+          <span>{{ currencyLabel(currency.symbol) }}</span>
+          <strong>Weight {{ currency.weight }}</strong>
         </div>
         }
+      </section>
+    </section>
+
+    <section class="bids-panel" aria-labelledby="bids-title">
+      <header class="detail-panel-heading">
+        <h2 id="bids-title">Bid History</h2>
+      </header>
+
+      @if (currentHighestBid(); as highestBid) {
+      <div class="highest-bid">
+        <span>Current Highest</span>
+        <strong>{{ highestBid.amount }} {{ currencyLabel(highestBid.currency_symbol) }}</strong>
+        <small>Weight {{ highestBid.calculated_weight }}</small>
       </div>
+      }
+
+      @if (isBidsLoading()) {
+      <p class="details-message" role="status">Loading bids...</p>
+      } @else if (bids().length > 0) {
+      <ol class="bid-list">
+        @for (bid of bids(); track bid.id) {
+        <li>
+          <div class="bid-row">
+            <strong>{{ bid.bidder_name ?? 'Anonymous bidder' }}</strong>
+            <span>{{ bid.amount }} {{ currencyLabel(bid.currency_symbol) }}</span>
+          </div>
+          <small>
+            Weight {{ bid.calculated_weight }} · {{ bid.created_at | date:'short' }}
+          </small>
+        </li>
+        }
+      </ol>
+      } @else {
+      <p class="details-message">No bids yet.</p>
+      }
+
+      @if (bidError()) {
+      <p class="bid-error" role="alert">{{ bidError() }}</p>
+      }
+
+      @if (canBid()) {
+      <form class="bid-form" [formGroup]="bidForm" (ngSubmit)="placeBid()">
+        <label class="bid-field">
+          <span>Currency</span>
+          <select formControlName="currencySymbol" aria-label="Currency">
+            <option value="" disabled>Select currency</option>
+            @for (currency of currentAuction.currencies; track currency.symbol) {
+            <option [value]="currency.symbol">{{ currencyLabel(currency.symbol) }} (weight {{ currency.weight }})</option>
+            }
+          </select>
+        </label>
+        <label class="bid-field amount-field">
+          <span>Amount</span>
+          <input type="number" formControlName="amount" min="1" max="2147483647" step="1" aria-label="Bid amount" />
+        </label>
+        <button class="bid-submit" type="submit" [disabled]="isPlacingBid() || bidForm.invalid">
+          {{ isPlacingBid() ? 'Submitting...' : 'Place bid' }}
+        </button>
+      </form>
+      } @else if (!currentUserId() && currentAuction.status === 'ACTIVE') {
+      <p class="details-message">Sign in with Discord to place a bid.</p>
+      } @else if (currentUserId() === currentAuction.seller_discord_id) {
+      <p class="details-message">You cannot bid on your own auction.</p>
+      } @else {
+      <p class="details-message">This auction is no longer accepting bids.</p>
+      }
     </section>
   </div>
-
-
-  <section class="flex flex-col gap-6">
-    <h3>Bid history</h3>
-    @if (currentHighestBid(); as highestBid) {
-    <p>
-      Current highest: {{ highestBid.amount }} {{ highestBid.currency_symbol }}
-      (weight {{ highestBid.calculated_weight }})
-    </p>
-    } @else {
-    <p>No bids yet.</p>
-    }
-
-    @if (isBidsLoading()) {
-    <p>Loading bids...</p>
-    } @else if (bids().length > 0) {
-    <ol class="flex flex-col gap-2">
-      @for (bid of bids(); track bid.id) {
-      <li>
-        <strong>{{ bid.bidder_name ?? 'Anonymous bidder' }}</strong>:
-        {{ bid.amount }} {{ bid.currency_symbol }}
-        (weight {{ bid.calculated_weight }})
-        <small>{{ bid.created_at | date:'short' }}</small>
-      </li>
-      }
-    </ol>
-    }
-
-    @if (bidError()) {
-    <p role="alert" style="color: #f87171;">{{ bidError() }}</p>
-    }
-
-    @if (canBid()) {
-    <form class="bid-form" [formGroup]="bidForm" (ngSubmit)="placeBid()">
-      <label class="bid-field bid-currency-field">
-        <span>Currency</span>
-        <select formControlName="currencySymbol" aria-label="Currency">
-          <option value="" disabled>Select currency</option>
-          @for (currency of currentAuction.currencies; track currency.symbol) {
-          <option [value]="currency.symbol">{{ currency.symbol }} (weight {{ currency.weight }})</option>
-          }
-        </select>
-      </label>
-      <label class="bid-field bid-amount-field">
-        <span>Amount</span>
-        <input type="number" formControlName="amount" min="1" max="2147483647" step="1" aria-label="Bid amount" />
-      </label>
-      <button class="bid-submit" type="submit" [disabled]="isPlacingBid() || bidForm.invalid">
-        {{ isPlacingBid() ? 'Submitting...' : 'Place bid' }}
-      </button>
-    </form>
-    } @else if (!currentUserId() && currentAuction.status === 'ACTIVE') {
-    <p>Sign in with Discord to place a bid.</p>
-    } @else if (currentUserId() === currentAuction.seller_discord_id) {
-    <p>You cannot bid on your own auction.</p>
-    } @else {
-    <p>This auction is no longer accepting bids.</p>
-    }
-  </section>
 
   @if (showEditModal() && isOwner()) {
   <app-auction-form [guildId]="currentAuction.guild_id ?? ''" [auction]="currentAuction"
