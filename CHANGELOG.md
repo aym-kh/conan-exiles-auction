@@ -11,6 +11,8 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-11-12
+
 ### Added
 - Added a reusable title component for the server selector and auction dashboard.
 - Added a home-screen "What's New?" panel with the latest release notes and a link to the full changelog.
