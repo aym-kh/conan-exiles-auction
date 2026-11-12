@@ -49,7 +49,10 @@
         <h3 id="currency-title">Accepted Currencies</h3>
         @for (currency of currentAuction.currencies; track currency.symbol) {
         <div class="currency-row">
-          <span>{{ currencyLabel(currency.symbol) }}</span>
+          <span class="currency-name">
+            <img class="currency-icon" [src]="'/images/currency/' + currency.symbol + '.webp'" alt="" aria-hidden="true" />
+            <span>{{ currencyLabel(currency.symbol) }}</span>
+          </span>
           <strong>Weight {{ currency.weight }}</strong>
         </div>
         }
@@ -64,7 +67,12 @@
       @if (currentHighestBid(); as highestBid) {
       <div class="highest-bid">
         <span>Current Highest</span>
-        <strong>{{ highestBid.amount }} {{ currencyLabel(highestBid.currency_symbol) }}</strong>
+        <strong>{{ highestBid.amount }}
+          <span class="currency-name">
+            <img class="currency-icon" [src]="'/images/currency/' + highestBid.currency_symbol + '.webp'" alt="" aria-hidden="true" />
+            <span>{{ currencyLabel(highestBid.currency_symbol) }}</span>
+          </span>
+        </strong>
         <small>Weight {{ highestBid.calculated_weight }}</small>
       </div>
       }
@@ -77,7 +85,12 @@
         <li>
           <div class="bid-row">
             <strong>{{ bid.bidder_name ?? 'Anonymous bidder' }}</strong>
-            <span>{{ bid.amount }} {{ currencyLabel(bid.currency_symbol) }}</span>
+            <span>{{ bid.amount }}
+              <span class="currency-name">
+                <img class="currency-icon" [src]="'/images/currency/' + bid.currency_symbol + '.webp'" alt="" aria-hidden="true" />
+                <span>{{ currencyLabel(bid.currency_symbol) }}</span>
+              </span>
+            </span>
           </div>
           <small>
             Weight {{ bid.calculated_weight }} · {{ bid.created_at | date:'short' }}
