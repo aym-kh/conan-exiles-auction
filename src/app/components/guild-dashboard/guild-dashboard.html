@@ -1,32 +1,105 @@
-<div class="flex flex-col gap-12 pt-8!">
-    <div class="flex items-center justify-between">
+<div class="dashboard">
+    <header class="dashboard-header">
         <div>
             <h2>Server Auction Dashboard</h2>
             <p>Guild ID: <code>{{ guildId }}</code></p>
         </div>
-        <div class="flex items-center gap-4">
-            <app-button [text]="'Create'" (click)="showCreateModal.set(true)"></app-button>
-            <button (click)="loadAuctions()" class="border border-solid p-2! rounded-lg cursor-pointer">Refresh</button>
+        <div class="dashboard-actions">
+            <app-button [text]="'Create Auction'" (click)="showCreateModal.set(true)"></app-button>
+            <button type="button" class="refresh-button" (click)="loadAuctions()"
+                [disabled]="loadingService.isLoading()">Refresh</button>
         </div>
+    </header>
+
+    <div class="auction-browser">
+        <section class="auction-list" aria-labelledby="auction-list-title">
+            <header class="panel-heading">
+                <h3 id="auction-list-title">Active Auctions</h3>
+                <span class="auction-count">{{ auctions().length }}</span>
+            </header>
+
+            @if (!loadingService.isLoading()) {
+            @if (listError()) {
+            <p class="dashboard-error" role="alert">{{ listError() }}</p>
+            } @else if (auctions().length === 0) {
+            <p class="empty-state">No active auctions for this server yet.</p>
+            } @else {
+            <div class="auction-table-wrap">
+                <table class="auction-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Auction</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Time Left</th>
+                            <th scope="col">Ends</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (auction of auctions(); track auction.id) {
+                        <tr [class.selected]="selectedAuctionId() === auction.id">
+                            <td>
+                                <button type="button" class="auction-select"
+                                    [attr.aria-pressed]="selectedAuctionId() === auction.id"
+                                    (click)="selectAuction(auction.id)">
+                                    {{ auction.title }}
+                                </button>
+                            </td>
+                            <td>{{ auction.is_blind ? 'Blind' : 'Open' }}</td>
+                            <td><span class="auction-timer" role="timer">{{ remainingTime(auction.end_time) }}</span></td>
+                            <td><time [attr.datetime]="auction.end_time">{{ auction.end_time | date:'short' }}</time>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+            }
+        </section>
+
+        <aside class="auction-details" aria-labelledby="auction-details-title">
+            <h3 id="auction-details-title">Auction Details</h3>
+            @if (!loadingService.isLoading()) {
+            @if (isDetailsLoading()) {
+            <p class="details-message" role="status">Loading auction details...</p>
+            } @else if (detailsError()) {
+            <p class="dashboard-error" role="alert">{{ detailsError() }}</p>
+            } @else if (selectedAuction(); as auction) {
+            <article class="auction-detail-content">
+                <span class="auction-status">{{ auction.status ?? 'Unknown' }}</span>
+                <h4>{{ auction.title }}</h4>
+                <p class="auction-description">{{ auction.description || 'No description provided.' }}</p>
+
+                <dl class="auction-facts">
+                    <div>
+                        <dt>Ends</dt>
+                        <dd><time [attr.datetime]="auction.end_time">{{ auction.end_time | date:'medium' }}</time></dd>
+                    </div>
+                    <div>
+                        <dt>Auction type</dt>
+                        <dd>{{ auction.is_blind ? 'Blind' : 'Open' }}</dd>
+                    </div>
+                </dl>
+
+                <section class="currency-details" aria-label="Accepted currencies">
+                    <h5>Accepted Currencies</h5>
+                    @for (currency of auction.currencies; track currency.symbol) {
+                    <div class="currency-row">
+                        <span>{{ currencyLabel(currency.symbol) }}</span>
+                        <strong>Weight {{ currency.weight }}</strong>
+                    </div>
+                    }
+                </section>
+
+                <a class="detail-link" [routerLink]="['/auctions', auction.id]">Open full auction</a>
+            </article>
+            } @else {
+            <p class="details-message">Select an auction to view its details.</p>
+            }
+            }
+        </aside>
     </div>
 
-    @if (isLoading()) {
-    <p>Loading auctions for this server...</p>
-    } @else {
-    @if (auctions().length === 0) {
-    <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 6px;">
-        <p>No active auctions for this server yet.</p>
-    </div>
-    } @else {
-    <div id="auctions-grid">
-        @for (auction of auctions(); track auction.id) {
-        <app-auction-plate [auction]="auction" [routerLink]="['/auctions', auction.id]"></app-auction-plate>
-        }
-    </div>
-    }
-    }
-
-    <!-- Render Create Modal when active -->
     @if (showCreateModal()) {
     <app-auction-form [guildId]="guildId" (auctionCreated)="onAuctionCreated()"
         (closeModal)="showCreateModal.set(false)" />

@@ -1,33 +1,85 @@
-.conan-button {
-    width: 150px;
-    height: 46px;
-    padding: 1rem 2rem;
-    /* overflow: hidden; */
+.conan-btn {
     position: relative;
-    cursor: pointer;
-    transition: transform 250ms ease-in-out;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    min-width: fit-content;
+    padding: .7rem 3rem;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+
+    background: radial-gradient(ellipse at center, #25292a 0%, #151819 100%);
+
+    border: 3px solid transparent;
+    border-image: var(--exile-button-frame) 1;
+
+    box-shadow: 0 4px 5px rgba(0, 0, 0, 0.5);
+
+    transition: filter 0.18s ease, transform 0.08s ease, box-shadow 0.18s ease;
+
+    &:hover {
+        filter: brightness(1.18);
+
+        .btn-label {
+            transform: scale(1.1);
+        }
+    }
+
+    &:active {
+        transform: translateY(1px);
+        filter: brightness(0.95);
+    }
 }
 
-.button-label {
+.btn-label {
     position: relative;
     z-index: 1;
-    font-size: 1em;
+    font-size: small;
+    transition: transform 5ms ease-in-out;
+    text-shadow:
+        0 2px 3px rgba(0, 0, 0, 0.95),
+        0 0 8px rgba(0, 0, 0, 0.6);
 }
 
-.button-bg {
+.stone-texture {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
+    opacity: 0.28;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    background-image: var(--exile-stone-grain);
 }
 
+.corner {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    pointer-events: none;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.8));
 
+    &.top-left {
+        top: -1px;
+        left: -1px;
+    }
 
-.conan-button:hover {
-    transform: scale(0.98);
+    &.top-right {
+        top: -1px;
+        right: -1px;
+        transform: scaleX(-1);
+    }
+
+    &.bottom-left {
+        bottom: -1px;
+        left: -1px;
+        transform: scaleY(-1);
+    }
+
+    &.bottom-right {
+        bottom: -1px;
+        right: -1px;
+        transform: scale(-1, -1);
+    }
 }

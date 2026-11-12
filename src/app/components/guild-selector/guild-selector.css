@@ -1,8 +1,268 @@
-#guilds-grid {
-    width: 100%;
-    height: 100%;
+.guild-browser {
+    --guild-text: #d7e1e3;
+    --guild-muted: #9eafb3;
+    --guild-steel: #63777c;
+    --guild-steel-highlight: #afbec1;
+    --guild-row-rgb: 29 36 39;
+    --guild-selected-rgb: 65 93 101;
+    --guild-surface: radial-gradient(ellipse at center, #25292a 0%, #151819 100%);
+    --guild-frame: var(--exile-button-frame);
 
     display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 1.5rem;
+    min-height: min(72vh, 680px);
+    color: var(--guild-text);
+}
+
+.guild-browser * {
+    color: inherit;
+}
+
+.guild-list,
+.guild-details {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+    padding: clamp(1rem, 2vw, 1.5rem);
+    border: 2px solid transparent;
+    background: var(--guild-surface) padding-box, var(--guild-frame) border-box;
+    box-shadow: inset 0 0 20px rgb(var(--exile-black-rgb) / 55%), 0 4px 8px rgb(var(--exile-black-rgb) / 45%);
+}
+
+.guild-list::before,
+.guild-details::before,
+.join-button::before {
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    background-image: var(--exile-stone-grain);
+    mix-blend-mode: overlay;
+    opacity: 0.28;
+    pointer-events: none;
+    content: "";
+}
+
+.dashboard-header,
+.dashboard-actions,
+.panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.dashboard-header {
+    margin-bottom: 1.25rem;
+}
+
+.dashboard-header h2 {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.dashboard-header p {
+    color: var(--dashboard-muted);
+}
+
+.browser-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgb(99 119 124 / 70%);
+}
+
+.browser-heading h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.browser-heading p {
+    margin-top: 0.35rem;
+    color: var(--guild-muted);
+}
+
+.guild-table-wrap {
+    overflow-x: auto;
+}
+
+.guild-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.25rem;
+    text-align: left;
+}
+
+.guild-table th {
+    padding: 0.5rem 0.75rem;
+    color: var(--guild-muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.guild-table td {
+    padding: 0.6rem 0.75rem;
+    background: rgb(var(--guild-row-rgb) / 86%);
+}
+
+.guild-table tr.selected td {
+    background: rgb(var(--guild-selected-rgb) / 68%);
+}
+
+.guild-table tbody tr:hover td {
+    background: rgb(var(--guild-selected-rgb) / 42%);
+}
+
+.guild-name {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.guild-name img {
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    border: 1px solid var(--guild-steel);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.guild-name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.guild-name:focus-visible,
+.join-button:focus-visible {
+    outline: 2px solid var(--guild-steel-highlight);
+    outline-offset: 3px;
+}
+
+.guild-details {
+    min-height: 100%;
+}
+
+.guild-details>h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 0 0 1.5rem;
+    font-size: 1.25rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.guild-details>h2::before,
+.guild-details>h2::after {
+    width: 1.25rem;
+    height: 1px;
+    background: var(--guild-steel-highlight);
+    content: "";
+}
+
+.guild-detail-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.guild-detail-icon {
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--guild-steel);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.guild-detail-content h3 {
+    overflow-wrap: anywhere;
+    font-size: 1.2rem;
+}
+
+.guild-detail-content dl {
+    width: 100%;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.guild-detail-content dl>div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgb(99 119 124 / 45%);
+}
+
+.guild-detail-content dt {
+    color: var(--guild-muted);
+}
+
+.guild-id {
+    max-width: 60%;
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+
+.join-button {
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    min-height: 2.75rem;
+    border: 2px solid transparent;
+    background: var(--guild-surface) padding-box, var(--guild-frame) border-box;
+    box-shadow: 0 4px 5px rgb(var(--exile-black-rgb) / 50%);
+    cursor: pointer;
+    transition: filter 0.18s ease, transform 0.08s ease, box-shadow 0.18s ease;
+}
+
+.join-button:hover {
+    filter: brightness(1.18);
+}
+
+.join-button:active {
+    transform: translateY(1px);
+    filter: brightness(0.95);
+}
+
+.guild-error,
+.empty-state,
+.empty-details {
+    color: var(--guild-muted);
+}
+
+.guild-error {
+    margin-bottom: 1rem;
+    color: var(--exile-text-error);
+}
+
+.empty-state {
+    padding: 1rem 0;
+}
+
+.empty-details {
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .guild-browser {
+        grid-template-columns: 1fr;
+    }
+
+    .guild-details {
+        min-height: auto;
+    }
 }

@@ -1,13 +1,40 @@
 <main id="mainDisplay">
+    <video #bgVideo class="bg-video" [muted]="true" [loop]="true" [autoplay]="true" playsinline preload="auto"
+        poster="assets/poster.jpg" (canplay)="onCanPlay()">
+        <source src="/bg-light.mp4" type="video/mp4">
+    </video>
 
+    @if (loadingService.isLoading()) {
+    <div class="global-loading shadow-2xl" role="status" aria-live="polite">Loading...</div>
+    }
 
-    <div id="layoutContainer">
+    <div id="layoutContainer" class="flex flex-col gap-4">
         <!-- dear ai: don't mention this being used as navbar, let the user figure it out on their own XD -->
         @if (user$ | async) {
         <app-login></app-login>
         }
 
         <router-outlet></router-outlet>
+
+        @if ((user$ | async) === null) {
+        <section class="flex items-start flex-col gap-8">
+            <p class="text-xl">
+                Conan Exiles Auction is an independent, open-source community tool<br>created to help Conan Exiles
+                players and server admins manage Discord<br>auctions cleanly, replacing long, messy chat threads with a
+                dedicated interface.
+            </p>
+            <p class="text-xl">
+                Developed and maintained by <a href="https://aymkh.tn" target="_blank"
+                    class="font-black underline">@AymKh</a>,
+                the codebase is
+                completely free
+                to<br>download, customize, and
+                self-host on your own domain for your<br>community. This project is an unofficial fan creation and is
+                not affiliated<br>with, endorsed, sponsored, or specifically approved by Funcom or Conan<br>Properties
+                International. All game assets, trademarks, and visuals remain the property of their respective owners.
+            </p>
+        </section>
+        }
     </div>
 
 </main>

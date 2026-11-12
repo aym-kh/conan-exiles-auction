@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { Button } from '../ui/button/button';
 import packageJson from '../../../../package.json';
@@ -11,6 +11,7 @@ import packageJson from '../../../../package.json';
   imports: [
     CommonModule,
     Button,
+    RouterLink
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css']

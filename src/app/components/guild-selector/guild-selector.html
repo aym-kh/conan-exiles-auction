@@ -1,29 +1,97 @@
-<div style="padding: 20px; font-family: sans-serif;">
-    <h3>Select Your Discord Server</h3>
+<header class="dashboard-header">
+    <div>
+        <h2>Discord servers list</h2>
+        <p>Note: choose a server you own in order to be able to create auctions</p>
+    </div>
+</header>
 
-    @if (errorMessage()) {
-    <p role="alert" style="color: #b91c1c;">{{ errorMessage() }}</p>
-    }
+<main class="guild-browser">
+    <section class="guild-list" aria-labelledby="guild-list-title">
+        <header class="browser-heading">
+            <div>
+                <p>Servers: {{ guilds().length }}</p>
+            </div>
+        </header>
 
-    @if (isLoading()) {
-    <p>Loading your servers...</p>
-    } @else {
-    @if (guilds().length === 0) {
-    <p>No servers found or session missing provider token. Try re-logging in.</p>
-    } @else {
+        @if (errorMessage()) {
+        <p class="guild-error" role="alert">{{ errorMessage() }}</p>
+        }
 
-    <section id="guilds-grid">
-        @for (guild of guilds(); track guild.id) {
-        <app-server-plate (click)="selectGuild(guild)" [image]="getGuildIcon(guild)" [title]="guild.name"
-            [isOwner]="guild.owner"></app-server-plate>
+        @if (!loadingService.isLoading()) {
+        @if (guilds().length === 0) {
+        <p class="empty-state">No servers found or session missing provider token. Try re-logging in.</p>
+        } @else {
+        <div class="guild-table-wrap">
+            <table class="guild-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Server Name</th>
+                        <th scope="col">Membership</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (guild of guilds(); track guild.id) {
+                    <tr [class.selected]="selectedGuild()?.id === guild.id">
+                        <td>
+                            <button type="button" class="guild-name"
+                                [attr.aria-pressed]="selectedGuild()?.id === guild.id" (click)="selectGuild(guild)">
+                                <img [src]="getGuildIcon(guild)" [alt]="''">
+                                <span>{{ guild.name }}</span>
+                            </button>
+                        </td>
+                        <td>{{ guild.owner ? 'Owner' : 'Member' }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
         }
     </section>
-    }
-    }
 
-    @if (selectedGuild(); as activeGuild) {
-    <div style="margin-top: 20px; padding: 10px; background: #eef2ff; border-radius: 6px;">
-        Active Server Selected: <strong>{{ activeGuild.name }}</strong> ({{ activeGuild.id }})
-    </div>
-    }
-</div>
+    <aside class="guild-details" aria-labelledby="guild-details-title">
+        <h2 id="guild-details-title">Server Details</h2>
+
+        @if (!loadingService.isLoading()) {
+        @if (selectedGuild(); as guild) {
+        <div class="guild-detail-content">
+            <img class="guild-detail-icon" [src]="getGuildIcon(guild)" [alt]="guild.name">
+            <h3>{{ guild.name }}</h3>
+            <dl>
+                <div>
+                    <dt>Membership</dt>
+                    <dd>{{ guild.owner ? 'Owner' : 'Member' }}</dd>
+                </div>
+                <div>
+                    <dt>Members (approx.)</dt>
+                    <dd>{{ formatApproximateCount(guild.approximate_member_count) }}</dd>
+                </div>
+                <div>
+                    <dt>Online (approx.)</dt>
+                    <dd>{{ formatApproximateCount(guild.approximate_presence_count) }}</dd>
+                </div>
+                <div>
+                    <dt>Server ID</dt>
+                    <dd class="guild-id">{{ guild.id }}</dd>
+                </div>
+            </dl>
+            @if (getFeatureLabels(guild).length > 0) {
+            <section class="w-full mb-6 text-left" aria-label="Server features">
+                <h4 class="text-xs! uppercase!">Highlights</h4>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    @for (feature of getFeatureLabels(guild); track feature) {
+                    <span class="border border-solid px-2 py-1 text-xs!">{{ feature }}</span>
+                    }
+                </div>
+            </section>
+            }
+            <button type="button" class="join-button" (click)="joinSelectedGuild()">
+                Get In
+            </button>
+        </div>
+        } @else {
+        <p class="empty-details">Select a server to view its details.</p>
+        }
+        }
+    </aside>
+</main>

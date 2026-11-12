@@ -7,19 +7,23 @@
 
     } @else if (currentUser) {
 
+    <div class="flex flex-col items-center cursor-pointer" [routerLink]="'/guilds'">
+        <img src="/images/title.webp" alt="title" class="w-32 pointer-events-none">
+        <small>v{{ version }}</small>
+    </div>
+
     <h3>Welcome, {{ currentUser.user_metadata?.['full_name'] }}!</h3>
-    <small>v{{ version }}</small>
+
     <app-button [text]="'Sign Out'" (click)="logout()"></app-button>
 
     } @else {
 
     <div id="loginInstructions">
-        <div>
-            <h2>Conan Exiles Auction House</h2>
-            <p>Sign in with your Discord account to view servers and place bids.</p>
-        </div>
 
-        <small>v{{ version }}</small>
+        <div class="flex flex-col items-center cursor-pointer" [routerLink]="'/guilds'">
+            <img src="/images/title.webp" alt="title" class="w-32 pointer-events-none">
+            <small>v{{ version }}</small>
+        </div>
 
         <app-button [text]="'login'" (click)="loginWithDiscord()"></app-button>
     </div>

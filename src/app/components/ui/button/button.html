@@ -1,4 +1,38 @@
-<div class="conan-button">
-    <span class="button-label">{{text}}</span>
-    <img src="/images/button-bg.png" alt="" class="button-bg">
-</div>
+<button class="conan-btn">
+    <!-- Procedural Stone Texture Layer -->
+    <span class="stone-texture" aria-hidden="true"></span>
+
+    <!-- Ornate Corner Flourishes -->
+    <svg class="corner top-left" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M1 1 H28 L20 6 C12 7 7 12 6 20 L1 28 Z" fill="url(#bronzeGrad)" stroke="#1a120b" stroke-width="1" />
+        <path d="M4 4 C10 4 14 8 14 14 C8 14 4 10 4 4 Z" fill="#2b2118" stroke="#c89d54" stroke-width="0.8" />
+        <defs>
+            <linearGradient id="bronzeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#e5c17b" />
+                <stop offset="50%" stop-color="#8c6239" />
+                <stop offset="100%" stop-color="#3d2914" />
+            </linearGradient>
+        </defs>
+    </svg>
+    <svg class="corner top-right" viewBox="0 0 32 32" aria-hidden="true">
+        <use href="#corner-shape" />
+    </svg>
+    <svg class="corner bottom-left" viewBox="0 0 32 32" aria-hidden="true">
+        <use href="#corner-shape" />
+    </svg>
+    <svg class="corner bottom-right" viewBox="0 0 32 32" aria-hidden="true">
+        <use href="#corner-shape" />
+    </svg>
+
+    <!-- Hidden reusable SVG symbol for the other 3 corners -->
+    <svg style="display: none;">
+        <symbol id="corner-shape" viewBox="0 0 32 32">
+            <path d="M1 1 H28 L20 6 C12 7 7 12 6 20 L1 28 Z" fill="url(#bronzeGrad)" stroke="#1a120b"
+                stroke-width="1" />
+            <path d="M4 4 C10 4 14 8 14 14 C8 14 4 10 4 4 Z" fill="#2b2118" stroke="#c89d54" stroke-width="0.8" />
+        </symbol>
+    </svg>
+
+    <!-- Button Label -->
+    <span class="btn-label">{{ text }}</span>
+</button>

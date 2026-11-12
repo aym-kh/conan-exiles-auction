@@ -5,6 +5,8 @@ export interface DiscordGuild {
     owner: boolean;
     permissions: string;
     features: string[];
+    approximate_member_count?: number;
+    approximate_presence_count?: number;
 }
 
 export type TAuctionStatus = 'DRAFT' | 'ACTIVE' | 'ENDED' | 'CANCELLED';

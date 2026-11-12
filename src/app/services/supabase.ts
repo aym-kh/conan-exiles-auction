@@ -63,7 +63,7 @@ export class SupabaseService {
         }
 
         try {
-            const response = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+            const response = await fetch('https://discord.com/api/v10/users/@me/guilds?with_counts=true', {
                 headers: {
                     Authorization: `Bearer ${session.provider_token}`
                 }
