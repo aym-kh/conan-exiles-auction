@@ -7,6 +7,8 @@ import { formatCountdown } from '../../utils/countdown';
 import { AuctionForm } from '../auction-form/auction-form';
 import { RouterLink } from '@angular/router';
 import { Button } from '../ui/button/button';
+import { Title } from '../ui/title/title';
+import { SCREEN_TITLES } from '../../const';
 
 @Component({
   imports: [
@@ -14,6 +16,7 @@ import { Button } from '../ui/button/button';
     AuctionForm,
     RouterLink,
     Button,
+    Title,
   ],
   selector: 'app-guild-dashboard',
   styleUrl: './guild-dashboard.css',
@@ -35,6 +38,8 @@ export class GuildDashboard implements OnInit, OnDestroy {
   protected readonly auctionCurrencies = AUCTION_CURRENCIES;
   private readonly now = signal(Date.now());
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
+
+  protected titleContent = SCREEN_TITLES.guild_details_screen;
 
   async ngOnInit() {
     this.countdownInterval = setInterval(() => this.now.set(Date.now()), 1000);

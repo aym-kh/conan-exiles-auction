@@ -5,19 +5,15 @@ import { LoadingService } from '../../services/loading';
 import { Auction } from '../../services/auction';
 import { DiscordGuild } from '../../types';
 import { Router } from '@angular/router';
-
-const SERVER_FEATURE_LABELS = new Map([
-  ['COMMUNITY', 'Community'],
-  ['VERIFIED', 'Verified'],
-  ['PARTNERED', 'Partnered'],
-  ['DISCOVERABLE', 'Discoverable'],
-]);
+import { Title } from '../ui/title/title';
+import { SCREEN_TITLES, SERVER_FEATURE_LABELS } from '../../const';
 
 @Component({
   selector: 'app-guild-selector',
   standalone: true,
   imports: [
     CommonModule,
+    Title,
   ],
   templateUrl: './guild-selector.html',
   styleUrl: './guild-selector.css'
@@ -32,6 +28,8 @@ export class GuildSelector implements OnInit {
   protected guilds = signal<DiscordGuild[]>([]);
   protected selectedGuild = signal<DiscordGuild | null>(null);
   protected errorMessage = signal<string | null>(null);
+
+  protected titleContent = SCREEN_TITLES.guilds_screen;
 
   @Output() guildSelected = new EventEmitter<DiscordGuild>();
 

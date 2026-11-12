@@ -1,21 +1,19 @@
-<div class="dashboard">
-    <header class="dashboard-header">
-        <div>
-            <h2>Server Auction Dashboard</h2>
-            <p>Guild ID: <code>{{ guildId }}</code></p>
-        </div>
-        <div class="dashboard-actions">
-            <app-button [text]="'Create Auction'" (click)="showCreateModal.set(true)"></app-button>
-            <button type="button" class="refresh-button" (click)="loadAuctions()"
-                [disabled]="loadingService.isLoading()">Refresh</button>
-        </div>
-    </header>
+<app-title [content]="titleContent"></app-title>
 
+<div class="dashboard">
     <div class="auction-browser">
-        <section class="auction-list" aria-labelledby="auction-list-title">
-            <header class="panel-heading">
-                <h3 id="auction-list-title">Active Auctions</h3>
-                <span class="auction-count">{{ auctions().length }}</span>
+        <section class="auction-list space-y-4" aria-labelledby="auction-list-title">
+            <header class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <h3 id="auction-list-title">Active Auctions</h3>
+                    <span class="auction-count">{{ auctions().length }}</span>
+                </div>
+
+                <div class="dashboard-actions">
+                    <app-button [text]="'Create Auction'" (click)="showCreateModal.set(true)"></app-button>
+                    <button type="button" class="refresh-button" (click)="loadAuctions()"
+                        [disabled]="loadingService.isLoading()">Refresh</button>
+                </div>
             </header>
 
             @if (!loadingService.isLoading()) {
@@ -45,7 +43,8 @@
                                 </button>
                             </td>
                             <td>{{ auction.is_blind ? 'Blind' : 'Open' }}</td>
-                            <td><span class="auction-timer" role="timer">{{ remainingTime(auction.end_time) }}</span></td>
+                            <td><span class="auction-timer" role="timer">{{ remainingTime(auction.end_time) }}</span>
+                            </td>
                             <td><time [attr.datetime]="auction.end_time">{{ auction.end_time | date:'short' }}</time>
                             </td>
                         </tr>
