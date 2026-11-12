@@ -2,6 +2,7 @@ import { AfterViewInit, Component, ElementRef, inject, ViewChild } from '@angula
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { Login } from './components/login/login';
+import { LoadingService } from './services/loading';
 import { SupabaseService } from './services/supabase';
 
 @Component({
@@ -17,6 +18,7 @@ import { SupabaseService } from './services/supabase';
 export class App implements AfterViewInit {
 
   protected readonly supabaseService = inject(SupabaseService);
+  protected readonly loadingService = inject(LoadingService);
   protected readonly user$ = this.supabaseService.user$;
   @ViewChild('bgVideo') videoRef!: ElementRef<HTMLVideoElement>;
 

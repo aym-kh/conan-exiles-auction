@@ -10,9 +10,7 @@
         </div>
     </div>
 
-    @if (isLoading()) {
-    <p>Loading auctions for this server...</p>
-    } @else {
+    @if (!loadingService.isLoading()) {
     @if (auctions().length === 0) {
     <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 6px;">
         <p>No active auctions for this server yet.</p>

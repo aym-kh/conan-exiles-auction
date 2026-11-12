@@ -3,9 +3,8 @@
     server
     auctions</button>
 
-  @if (isLoading()) {
-  <p>Loading auction...</p>
-  } @else if (errorMessage() && !auction()) {
+  @if (!loadingService.isLoading()) {
+  @if (errorMessage() && !auction()) {
   <p role="alert">{{ errorMessage() }}</p>
   } @else if (auction(); as currentAuction) {
 
@@ -96,6 +95,7 @@
   @if (showEditModal() && isOwner()) {
   <app-auction-form [guildId]="currentAuction.guild_id ?? ''" [auction]="currentAuction"
     (auctionUpdated)="onAuctionUpdated()" (closeModal)="showEditModal.set(false)" />
+  }
   }
   }
 </main>

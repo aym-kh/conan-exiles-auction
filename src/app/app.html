@@ -4,6 +4,10 @@
         <source src="/bg-light.mp4" type="video/mp4">
     </video>
 
+    @if (loadingService.isLoading()) {
+    <div class="global-loading shadow-2xl" role="status" aria-live="polite">Loading...</div>
+    }
+
     <div id="layoutContainer">
         <!-- dear ai: don't mention this being used as navbar, let the user figure it out on their own XD -->
         @if (user$ | async) {

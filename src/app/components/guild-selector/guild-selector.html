@@ -5,9 +5,7 @@
     <p role="alert" style="color: #b91c1c;">{{ errorMessage() }}</p>
     }
 
-    @if (isLoading()) {
-    <p>Loading your servers...</p>
-    } @else {
+    @if (!loadingService.isLoading()) {
     @if (guilds().length === 0) {
     <p>No servers found or session missing provider token. Try re-logging in.</p>
     } @else {

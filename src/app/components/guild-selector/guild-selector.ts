@@ -1,6 +1,7 @@
 import { Component, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
+import { LoadingService } from '../../services/loading';
 import { Auction } from '../../services/auction';
 import { DiscordGuild } from '../../types';
 import { Router } from '@angular/router';
@@ -21,21 +22,19 @@ export class GuildSelector implements OnInit {
   private readonly supabaseService = inject(SupabaseService);
   private readonly auctionService = inject(Auction);
   private readonly router = inject(Router);
+  protected readonly loadingService = inject(LoadingService);
 
   private guilds = signal<DiscordGuild[]>([]);
   private selectedGuild = signal<DiscordGuild | null>(null);
-  private isLoading = signal<boolean>(true);
   protected errorMessage = signal<string | null>(null);
 
   @Output() guildSelected = new EventEmitter<DiscordGuild>();
 
   async ngOnInit() {
-    try {
+    await this.loadingService.track(async () => {
       const userGuilds = await this.supabaseService.getUserGuilds();
       this.guilds.set(userGuilds);
-    } finally {
-      this.isLoading.set(false);
-    }
+    });
   }
 
   protected async selectGuild(guild: DiscordGuild) {
