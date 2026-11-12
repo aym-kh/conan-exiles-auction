@@ -11,6 +11,13 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+### Added
+- Added a reusable title component for the server selector and auction dashboard.
+- Added a home-screen "What's New?" panel with the latest release notes and a link to the full changelog.
+- Restored the auction owner's Edit and Delete actions on auction details.
+- Added Eldarium as an accepted auction currency.
+- Display currency icons beside currency names in auction details and bid summaries.
+
 ## [3.0.0] - 2026-11-12
 
 ### Added
