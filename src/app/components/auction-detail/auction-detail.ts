@@ -52,6 +52,15 @@ export class AuctionDetail implements OnInit, OnDestroy {
     return AUCTION_CURRENCIES.find((currency) => currency.symbol === currencySymbol)?.label ?? currencySymbol;
   }
 
+  protected currencyIconPath(currencySymbol: string): string {
+    const normalizedSymbol = currencySymbol.trim().toLowerCase().replace(/[\s-]+/g, '_');
+    const currency = AUCTION_CURRENCIES.find((option) =>
+      option.symbol === normalizedSymbol
+      || option.label.toLowerCase().replace(/[\s-]+/g, '_') === normalizedSymbol,
+    );
+    return `/images/currency/${currency?.symbol ?? normalizedSymbol}.webp`;
+  }
+
   protected remainingTime(endTime: string): string {
     return formatCountdown(endTime, this.now());
   }

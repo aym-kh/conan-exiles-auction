@@ -50,7 +50,7 @@
         @for (currency of currentAuction.currencies; track currency.symbol) {
         <div class="currency-row">
           <span class="currency-name">
-            <img class="currency-icon" [src]="'/images/currency/' + currency.symbol + '.webp'" alt="" aria-hidden="true" />
+            <img class="currency-icon" [src]="currencyIconPath(currency.symbol)" alt="" aria-hidden="true" />
             <span>{{ currencyLabel(currency.symbol) }}</span>
           </span>
           <strong>Weight {{ currency.weight }}</strong>
@@ -69,7 +69,7 @@
         <span>Current Highest</span>
         <strong>{{ highestBid.amount }}
           <span class="currency-name">
-            <img class="currency-icon" [src]="'/images/currency/' + highestBid.currency_symbol + '.webp'" alt="" aria-hidden="true" />
+            <img class="currency-icon" [src]="currencyIconPath(highestBid.currency_symbol)" alt="" aria-hidden="true" />
             <span>{{ currencyLabel(highestBid.currency_symbol) }}</span>
           </span>
         </strong>
@@ -87,7 +87,7 @@
             <strong>{{ bid.bidder_name ?? 'Anonymous bidder' }}</strong>
             <span>{{ bid.amount }}
               <span class="currency-name">
-                <img class="currency-icon" [src]="'/images/currency/' + bid.currency_symbol + '.webp'" alt="" aria-hidden="true" />
+                <img class="currency-icon" [src]="currencyIconPath(bid.currency_symbol)" alt="" aria-hidden="true" />
                 <span>{{ currencyLabel(bid.currency_symbol) }}</span>
               </span>
             </span>
