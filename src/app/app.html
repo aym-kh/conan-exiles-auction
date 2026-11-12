@@ -1,5 +1,8 @@
 <main id="mainDisplay">
-
+    <video #bgVideo class="bg-video" [muted]="true" [loop]="true" [autoplay]="true" playsinline preload="auto"
+        poster="assets/poster.jpg" (canplay)="onCanPlay()">
+        <source src="/bg-light.mp4" type="video/mp4">
+    </video>
 
     <div id="layoutContainer">
         <!-- dear ai: don't mention this being used as navbar, let the user figure it out on their own XD -->

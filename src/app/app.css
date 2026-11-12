@@ -7,18 +7,17 @@
     overflow-y: scroll;
 }
 
-#mainDisplay::before {
-    position: fixed;
-    inset: -4px;
-    z-index: -1;
-    background:
-        linear-gradient(rgb(0 0 0 / 48%), rgb(0 0 0 / 48%)),
-        url("/images/bg.webp") center / cover no-repeat;
-    content: "";
-    filter: blur(3px);
-}
-
 #layoutContainer {
     width: 80vw;
     margin: 2rem auto;
+}
+
+.bg-video {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(0.3);
 }
