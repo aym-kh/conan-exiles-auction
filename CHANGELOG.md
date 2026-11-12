@@ -11,6 +11,8 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-11-12
+
 ### Fixed
 - Resolve legacy currency names to their canonical icon filenames so image requests don't fall through to the app page.
 
