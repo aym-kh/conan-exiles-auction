@@ -53,12 +53,6 @@
     border-bottom: 1px solid rgb(99 119 124 / 70%);
 }
 
-.browser-heading h2 {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    line-height: 1.2;
-    text-transform: uppercase;
-}
-
 .browser-heading p {
     margin-top: 0.35rem;
     color: var(--guild-muted);
