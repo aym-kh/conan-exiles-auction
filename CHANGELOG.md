@@ -19,6 +19,7 @@ entries into a dated section automatically.
 - Reworked server selection, the guild dashboard, and auction details into game-inspired split views.
 - Applied the reusable slate, gold-frame, and stone-grain theme to the updated panels and auction form, removing their previous imagery.
 - Show the guest welcome section only when the user is signed out.
+- Added explicit development and production environment configurations, with release builds pinned to production.
 
 ## [2.1.0] - 2026-11-11
 
