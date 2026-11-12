@@ -3,7 +3,7 @@
 @import 'tailwindcss';
 
 :root {
-    --exile-font: 'Cinzel Decorative', 'Book Antiqua', Palatino, serif;
+    --exile-font: 'Alegreya SC', 'Book Antiqua', Palatino, serif;
     --exile-text: #e7c79c;
     --exile-text-bright: #f0dfc5;
     --exile-text-button: #f0d7ae;
