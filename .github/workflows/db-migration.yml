@@ -46,3 +46,9 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+      - name: Deploy Scheduled Discord Notification Dispatcher Function
+        run: supabase functions deploy dispatch-scheduled-discord-notifications --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt --yes
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
