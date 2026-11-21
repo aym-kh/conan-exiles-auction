@@ -67,7 +67,16 @@
             <article class="auction-detail-content">
                 <span class="auction-status">{{ auction.status ?? 'Unknown' }}</span>
                 <h4>{{ auction.title }}</h4>
+                @if (!auction.items?.length) {
                 <p class="auction-description">{{ auction.description || 'No description provided.' }}</p>
+                }
+                @if (auction.items?.length) {
+                <ul class="auction-item-list" aria-label="Auction items">
+                    @for (item of auction.items; track item.id) {
+                    <li>{{ item.title }}</li>
+                    }
+                </ul>
+                }
 
                 <dl class="auction-facts">
                     <div>

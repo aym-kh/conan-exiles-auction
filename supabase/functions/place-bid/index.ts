@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface PlaceBidRequest {
   auctionId: string;
+  itemId: string | null;
   currencySymbol: string;
   amount: number;
   providerToken: string;
@@ -38,6 +39,9 @@ const isPlaceBidRequest = (value: unknown): value is PlaceBidRequest => {
   const body = value as Record<string, unknown>;
   return typeof body.auctionId === 'string'
     && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.auctionId)
+    && (body.itemId === null
+      || (typeof body.itemId === 'string'
+        && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.itemId)))
     && typeof body.currencySymbol === 'string'
     && !!body.currencySymbol.trim()
     && Number.isSafeInteger(body.amount)
@@ -194,6 +198,7 @@ Deno.serve(async (request: Request) => {
     p_bidder_avatar: avatar,
     p_currency_symbol: body.currencySymbol,
     p_amount: body.amount,
+    p_item_id: body.itemId,
   });
 
   if (bidError) {

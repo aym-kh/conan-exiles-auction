@@ -1,66 +1,147 @@
-<div class="auction-form-backdrop">
-    <section class="auction-form-plate" role="dialog" aria-modal="true"
-        [attr.aria-label]="auction ? 'Edit auction' : 'Create auction'">
-        <div class="plate-content">
-            <header class="form-header">
-                <h2>{{ auction ? 'Edit Auction' : 'Create New Auction' }}</h2>
+<div class="fixed inset-0 z-1000 flex items-center justify-center overflow-y-auto bg-black/75 p-4 max-[520px]:p-2">
+    <section
+        class="transition-all ease-in-out duration-300 relative isolate max-h-full overflow-y-auto border-[3px] border-transparent [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] shadow-[0_16px_48px_rgb(var(--exile-black-rgb)/80%)] before:pointer-events-none before:absolute before:inset-0.75 before:-z-10 before:mix-blend-overlay before:opacity-[0.28] before:[background-image:var(--exile-stone-grain)] before:content-['']"
+        [ngClass]="isMultiItemAuction ? 'w-[80vw] max-w-7xl max-[800px]:w-full' : 'w-full max-w-180'" role="dialog"
+        aria-modal="true" [attr.aria-label]="auction ? 'Edit auction' : 'Create auction'">
+        <div class="relative p-[clamp(1.25rem,4vw,2rem)]">
+            <header class="mb-6 flex items-center">
+                <h2 class="text-[clamp(1.25rem,4vw,1.75rem)] text-(--exile-text)">
+                    {{ auction ? 'Edit Auction' : 'Create New Auction' }}
+                </h2>
             </header>
 
             @if (errorMessage()) {
-            <p class="form-error" role="alert">{{ errorMessage() }}</p>
+            <p class="mb-4 rounded border border-(--exile-border-error) bg-[rgb(var(--exile-error-bg-rgb)/85%)] p-[0.65rem_0.8rem] text-(--exile-text-error)"
+                role="alert">{{ errorMessage() }}</p>
             }
 
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                <label class="form-field">
-                    <span>Title *</span>
-                    <input type="text" formControlName="title" placeholder="e.g., Sword of Crom" />
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+                <label class="flex items-center gap-[0.6rem]">
+                    <input class="size-4 accent-(--exile-accent)" type="checkbox" formControlName="has_multiple_items"
+                        [disabled]="!!auction" (change)="onMultiItemChange($event)" />
+                    <span>Multiple items</span>
                 </label>
 
-                <label class="form-field">
-                    <span>Description</span>
-                    <textarea formControlName="description" rows="3"
-                        placeholder="Flawless high-grade weapons, stats, etc."></textarea>
-                </label>
+                <div class="grid grid-cols-1"
+                    [ngClass]="isMultiItemAuction ? 'min-[801px]:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] items-start gap-6' : ''">
+                    <div class="min-w-0 space-y-4">
+                        @if (!isMultiItemAuction) {
+                        <label class="grid gap-[0.4rem]">
+                            <span class="font-bold text-(--exile-text)">Title *</span>
+                            <input
+                                class="w-full min-w-0 rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none placeholder:text-(--exile-text-muted) focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                type="text" formControlName="title" placeholder="e.g., Sword of Crom" />
+                        </label>
 
-                <label class="blind-auction">
-                    <input type="checkbox" formControlName="is_blind" />
-                    <span>Blind auction</span>
-                </label>
+                        <label class="grid gap-[0.4rem]">
+                            <span class="font-bold text-(--exile-text)">Description</span>
+                            <textarea
+                                class="w-full min-w-0 resize-y rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none placeholder:text-(--exile-text-muted) focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                formControlName="description" rows="3"
+                                placeholder="Flawless high-grade weapons, stats, etc."></textarea>
+                        </label>
+                        }
 
-                <div class="currency-fields" formArrayName="currencies">
-                    <span class="field-heading">Currencies *</span>
-                    @for (currency of currencyControls.controls; track $index) {
-                    <div class="currency-row" [formGroupName]="$index">
-                        <select formControlName="symbol" [attr.aria-label]="'Currency ' + ($index + 1)">
-                            <option value="" disabled>Select currency</option>
-                            @for (currencyOption of auctionCurrencyOptions; track currencyOption.symbol) {
-                            <option [value]="currencyOption.symbol">{{ currencyOption.label }}</option>
+                        <label class="flex items-center gap-[0.6rem]">
+                            <input class="size-4 accent-(--exile-accent)" type="checkbox" formControlName="is_blind" />
+                            <span>Blind auction</span>
+                        </label>
+
+                        <div class="grid gap-3" formArrayName="currencies">
+                            <span class="font-bold text-(--exile-text)">Currencies *</span>
+                            @for (currency of currencyControls.controls; track $index) {
+                            <div class="grid grid-cols-[minmax(0,2fr)_minmax(80px,1fr)_auto] gap-2 max-[520px]:grid-cols-[minmax(0,1fr)_78px]"
+                                [formGroupName]="$index">
+                                <select
+                                    class="w-full min-w-0 rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                    formControlName="symbol" [attr.aria-label]="'Currency ' + ($index + 1)">
+                                    <option value="" disabled>Select currency</option>
+                                    @for (currencyOption of auctionCurrencyOptions; track currencyOption.symbol) {
+                                    <option [value]="currencyOption.symbol">{{ currencyOption.label }}</option>
+                                    }
+                                </select>
+                                <input
+                                    class="w-full min-w-0 rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                    type="number" formControlName="weight" min="1"
+                                    [attr.aria-label]="'Currency weight ' + ($index + 1)" />
+                                <button
+                                    class="relative min-h-10.5 min-w-22 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55 max-[520px]:col-span-full max-[520px]:justify-self-start"
+                                    type="button" (click)="removeCurrency($index)"
+                                    [disabled]="currencyControls.length === 1">
+                                    Remove
+                                </button>
+                            </div>
                             }
-                        </select>
-                        <input type="number" formControlName="weight" min="1"
-                            [attr.aria-label]="'Currency weight ' + ($index + 1)" />
-                        <button class="plate-button remove-button" type="button" (click)="removeCurrency($index)"
-                            [disabled]="currencyControls.length === 1">
-                            Remove
+                            <button
+                                class="relative min-h-10.5 justify-self-start cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+                                type="button" (click)="addCurrency()">
+                                Add currency
+                            </button>
+                        </div>
+
+                        <label class="grid gap-[0.4rem]">
+                            <span class="font-bold text-(--exile-text)">Auction Ends At *</span>
+                            <input
+                                class="w-full min-w-0 rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                type="datetime-local" formControlName="end_time" />
+                        </label>
+                    </div>
+
+                    @if (isMultiItemAuction) {
+                    <div class="flex min-w-0 flex-col gap-3" formArrayName="items">
+                        <span class="font-bold text-(--exile-text)">Auction items *</span>
+                        <div
+                            class="grid min-h-0 max-h-[min(56vh,560px)] gap-3 overflow-y-auto p-px pr-1 max-[800px]:max-h-none max-[800px]:overflow-visible">
+                            @for (item of itemControls.controls; track $index) {
+                            <div class="grid gap-2 border border-[rgb(150_116_72/35%)] bg-[rgb(var(--exile-panel-rgb)/65%)] p-3"
+                                [formGroupName]="$index">
+                                <label class="mb-2 grid gap-[0.4rem]">
+                                    <span class="font-bold text-(--exile-text)">Item {{ $index + 1 }} title *</span>
+                                    <input
+                                        class="w-full min-w-0 rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none placeholder:text-(--exile-text-muted) focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                        type="text" formControlName="title" placeholder="e.g., Sword of Crom" />
+                                    @if (item.controls.title.invalid && item.controls.title.touched) {
+                                    <small class="text-(--exile-text-error)">Enter an item title with at least three
+                                        characters.</small>
+                                    }
+                                </label>
+                                <label class="mb-2 grid gap-[0.4rem]">
+                                    <span class="font-bold text-(--exile-text)">Item description</span>
+                                    <textarea
+                                        class="w-full min-w-0 resize-y rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none placeholder:text-(--exile-text-muted) focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                        formControlName="description" rows="3"
+                                        placeholder="Item stats, condition, etc."></textarea>
+                                </label>
+                                <button
+                                    class="relative min-h-10.5 min-w-22 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55 max-[520px]:col-span-full max-[520px]:justify-self-start"
+                                    type="button" (click)="removeItem($index)" [disabled]="itemControls.length <= 2">
+                                    Remove item
+                                </button>
+                            </div>
+                            }
+                            @if (hasTooFewItems) {
+                            <p class="text-(--exile-text-error)" role="alert">Add at least two items to create a
+                                multi-item auction.</p>
+                            }
+                        </div>
+                        <button
+                            class="relative min-h-10.5 justify-self-start cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+                            type="button" (click)="addItem()">
+                            Add item
                         </button>
                     </div>
                     }
-                    <button class="plate-button secondary-button" type="button" (click)="addCurrency()">
-                        Add currency
-                    </button>
                 </div>
 
-                <label class="form-field">
-                    <span>Auction Ends At *</span>
-                    <input type="datetime-local" formControlName="end_time" />
-                </label>
-
-                <footer class="form-actions">
-                    <button class="plate-button secondary-button" type="button" (click)="cancel()"
-                        [disabled]="isSubmitting()">
+                <footer class="flex justify-end gap-3 max-[520px]:flex-wrap">
+                    <button
+                        class="relative min-h-10.5 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+                        type="button" (click)="cancel()" [disabled]="isSubmitting()">
                         Cancel
                     </button>
-                    <button class="plate-button primary-button" type="submit" [disabled]="isSubmitting()">
+                    <button
+                        class="relative min-h-10.5 min-w-37.5 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+                        type="submit" [disabled]="isSubmitting()">
                         {{ isSubmitting() ? 'Saving...' : auction ? 'Save Changes' : 'Create Auction' }}
                     </button>
                 </footer>
