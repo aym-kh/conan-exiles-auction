@@ -29,11 +29,13 @@ export class AuctionDetail implements OnInit, OnDestroy {
   protected readonly loadingService = inject(LoadingService);
   private readonly fb = inject(FormBuilder).nonNullable;
   private bidsChannel: RealtimeChannel | null = null;
+  private wasSealedBiddingActive = false;
   private readonly now = signal(Date.now());
   private expirationTimer: ReturnType<typeof setInterval> | null = null;
 
   protected readonly auction = signal<IAuction | null>(null);
   protected readonly bids = signal<IAuctionBid[]>([]);
+  protected readonly sealedOfferCount = signal<number | null>(null);
   protected readonly selectedItemId = signal<string | null>(null);
   protected readonly currentUserId = signal<string | null>(null);
   protected readonly isOwner = signal(false);
@@ -46,7 +48,17 @@ export class AuctionDetail implements OnInit, OnDestroy {
   protected readonly bidSubmissionMessage = signal<string | null>(null);
 
   async ngOnInit() {
-    this.expirationTimer = setInterval(() => this.now.set(Date.now()), 1000);
+    this.expirationTimer = setInterval(() => {
+      this.now.set(Date.now());
+      const sealedBiddingIsActive = this.isSealedBiddingActive();
+      if (this.wasSealedBiddingActive && !sealedBiddingIsActive) {
+        const auction = this.auction();
+        if (auction) {
+          void this.loadBids(auction.id);
+        }
+      }
+      this.wasSealedBiddingActive = sealedBiddingIsActive;
+    }, 1000);
     await this.loadAuction();
   }
 
@@ -78,6 +90,20 @@ export class AuctionDetail implements OnInit, OnDestroy {
       && auction.bid_visibility === 'sealed'
       && auction.status === 'ACTIVE'
       && new Date(auction.end_time).getTime() > this.now();
+  });
+
+  protected readonly sealedOfferCountMessage = computed(() => {
+    const count = this.sealedOfferCount();
+    const scope = this.auction()?.items?.length ? 'for this item' : 'for this auction';
+
+    if (count === null) {
+      return 'Offers are sealed until the auction ends.';
+    }
+    if (count === 0) {
+      return `No sealed offers yet ${scope}.`;
+    }
+
+    return `${count} sealed ${count === 1 ? 'offer' : 'offers'} received ${scope}.`;
   });
 
   protected readonly bidForm = this.fb.group({
@@ -139,6 +165,7 @@ export class AuctionDetail implements OnInit, OnDestroy {
             () => void this.loadBids(auction.id),
           );
         }
+        this.wasSealedBiddingActive = this.isSealedBiddingActive();
         await this.loadBids(auction.id);
       } catch (error) {
         console.error(`Failed to load auction ${auctionId}:`, error);
@@ -150,8 +177,14 @@ export class AuctionDetail implements OnInit, OnDestroy {
   private async loadBids(auctionId: string) {
     this.isBidsLoading.set(true);
     this.bidError.set(null);
+    this.sealedOfferCount.set(null);
     try {
       this.bids.set(await this.auctionService.getAuctionBids(auctionId));
+      if (this.isSealedBiddingActive()) {
+        this.sealedOfferCount.set(
+          await this.auctionService.getAuctionBidCount(auctionId, this.selectedItemId()),
+        );
+      }
     } catch (error) {
       console.error(`Failed to load bids for auction ${auctionId}:`, error);
       this.bidError.set('Could not load bid history.');
@@ -198,6 +231,12 @@ export class AuctionDetail implements OnInit, OnDestroy {
     if (target instanceof HTMLSelectElement) {
       this.selectedItemId.set(target.value || null);
       this.bidSubmissionMessage.set(null);
+      if (this.isSealedBiddingActive()) {
+        const auction = this.auction();
+        if (auction) {
+          void this.loadBids(auction.id);
+        }
+      }
     }
   }
 

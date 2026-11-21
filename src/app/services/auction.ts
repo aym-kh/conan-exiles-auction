@@ -101,6 +101,23 @@ export class Auction {
         return data ?? [];
     }
 
+    async getAuctionBidCount(auctionId: string, itemId: string | null): Promise<number> {
+        const { data, error } = await this.client.rpc('get_auction_bid_count', {
+            p_auction_id: auctionId,
+            p_item_id: itemId,
+        });
+
+        if (error) {
+            console.error(`Error fetching bid count for auction ${auctionId}:`, error);
+            throw error;
+        }
+        if (typeof data !== 'number' || !Number.isInteger(data) || data < 0) {
+            throw new Error('Bid count response was invalid.');
+        }
+
+        return data;
+    }
+
     async isBidVisibilityLocked(auctionId: string): Promise<boolean> {
         const { data, error } = await this.client.rpc('is_auction_bid_visibility_locked', {
             p_auction_id: auctionId,

@@ -112,7 +112,7 @@
       @if (isBidsLoading()) {
       <p class="details-message" role="status">Loading bids...</p>
       } @else if (isSealedBiddingActive()) {
-      <p class="details-message">Offers are sealed until the auction ends.</p>
+      <p class="details-message" role="status">{{ sealedOfferCountMessage() }}</p>
       } @else if (selectedItemBids().length > 0) {
       <ol class="bid-list">
         @for (bid of selectedItemBids(); track bid.id) {
