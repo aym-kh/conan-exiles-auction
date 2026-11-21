@@ -6,16 +6,18 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
 import { LoadingService } from '../../services/loading';
-import { IAuction, IAuctionBid } from '../../types';
+import { IAuction, IAuctionBid, IAuctionImage } from '../../types';
 import { formatCountdown } from '../../utils/countdown';
 import { AuctionForm } from '../auction-form/auction-form';
 import { AUCTION_CURRENCIES } from '../../const';
+import { AuctionImageGallery } from '../auction-image-gallery/auction-image-gallery';
 
 @Component({
   imports: [
     CommonModule,
     ReactiveFormsModule,
     AuctionForm,
+    AuctionImageGallery,
   ],
   selector: 'app-auction-detail',
   styleUrl: './auction-detail.css',
@@ -35,6 +37,21 @@ export class AuctionDetail implements OnInit, OnDestroy {
 
   protected readonly auction = signal<IAuction | null>(null);
   protected readonly bids = signal<IAuctionBid[]>([]);
+  protected readonly auctionImages = signal<IAuctionImage[]>([]);
+  private readonly emptyAuctionImages: IAuctionImage[] = [];
+  private readonly auctionImagesByItem = computed(() => {
+    const groups = new Map<string, IAuctionImage[]>();
+    for (const image of this.auctionImages()) {
+      const key = image.item_id ?? 'auction';
+      const group = groups.get(key);
+      if (group) {
+        group.push(image);
+      } else {
+        groups.set(key, [image]);
+      }
+    }
+    return groups;
+  });
   protected readonly sealedOfferCount = signal<number | null>(null);
   protected readonly selectedItemId = signal<string | null>(null);
   protected readonly currentUserId = signal<string | null>(null);
@@ -46,6 +63,7 @@ export class AuctionDetail implements OnInit, OnDestroy {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly bidError = signal<string | null>(null);
   protected readonly bidSubmissionMessage = signal<string | null>(null);
+  protected readonly imageError = signal<string | null>(null);
 
   async ngOnInit() {
     this.expirationTimer = setInterval(() => {
@@ -64,6 +82,10 @@ export class AuctionDetail implements OnInit, OnDestroy {
 
   protected currencyLabel(currencySymbol: string): string {
     return AUCTION_CURRENCIES.find((currency) => currency.symbol === currencySymbol)?.label ?? currencySymbol;
+  }
+
+  protected imagesForItem(itemId: string | null): IAuctionImage[] {
+    return this.auctionImagesByItem().get(itemId ?? 'auction') ?? this.emptyAuctionImages;
   }
 
   protected currencyIconPath(currencySymbol: string): string {
@@ -167,6 +189,13 @@ export class AuctionDetail implements OnInit, OnDestroy {
           return;
         }
         this.selectedItemId.set(auction.items?.[0]?.id ?? null);
+        this.imageError.set(null);
+        try {
+          this.auctionImages.set(await this.auctionService.getAuctionImages(auction.id));
+        } catch (error) {
+          console.error(`Failed to load images for auction ${auction.id}:`, error);
+          this.imageError.set('Could not load auction images.');
+        }
 
         const user = await this.supabaseService.getCurrentUser();
         this.currentUserId.set(user?.id ?? null);

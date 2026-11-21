@@ -8,6 +8,11 @@ export const AUCTION_CURRENCIES = [
 
 export const MULTI_ITEM_AUCTION_TITLE = 'Multi-item auction';
 
+export const AUCTION_IMAGE_MAX_COUNT = 3;
+export const AUCTION_IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+export const AUCTION_IMAGE_MAX_SIZE_LABEL = '10MB';
+export const AUCTION_IMAGE_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+
 export const SERVER_FEATURE_LABELS = new Map([
     ['COMMUNITY', 'Community'],
     ['VERIFIED', 'Verified'],

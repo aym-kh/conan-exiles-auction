@@ -14,11 +14,17 @@
             <p class="mb-4 rounded border border-(--exile-border-error) bg-[rgb(var(--exile-error-bg-rgb)/85%)] p-[0.65rem_0.8rem] text-(--exile-text-error)"
                 role="alert">{{ errorMessage() }}</p>
             }
+            @if (isLoadingImages()) {
+            <p class="mb-4 text-(--exile-text-muted)" role="status">Loading existing images...</p>
+            }
+            @if (imageLoadError()) {
+            <p class="mb-4 text-(--exile-text-error)" role="alert">{{ imageLoadError() }}</p>
+            }
 
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
                 <label class="flex items-center gap-[0.6rem]">
                     <input class="size-4 accent-(--exile-accent)" type="checkbox" formControlName="has_multiple_items"
-                        [disabled]="!!auction" (change)="onMultiItemChange($event)" />
+                        [disabled]="auctionModeLocked" (change)="onMultiItemChange($event)" />
                     <span>Multiple items</span>
                 </label>
 
@@ -40,6 +46,33 @@
                                 formControlName="description" rows="3"
                                 placeholder="Flawless high-grade weapons, stats, etc."></textarea>
                         </label>
+
+                        <div class="grid gap-2">
+                            <span class="font-bold text-(--exile-text)">Item images (up to {{ maxAuctionImages }})</span>
+                            @for (image of existingImagesFor(null); track image.id) {
+                            <div class="flex items-center gap-3">
+                                <img class="size-16 rounded border border-(--exile-border) object-cover"
+                                    [src]="image.public_url" [alt]="'Image ' + (image.sort_order + 1) + ' of ' + form.controls.title.value" />
+                                <button
+                                    class="relative min-h-10.5 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+                                    type="button" (click)="removeExistingImage(image.id)" [disabled]="isSubmitting()">
+                                    Remove image
+                                </button>
+                            </div>
+                            }
+                            @defer (on viewport) {
+                            <app-auction-image-uploader
+                                [disabled]="isSubmitting()"
+                                (filesChange)="onImageFilesChanged($event, 'auction')" />
+                            } @placeholder {
+                            <p class="text-(--exile-text-muted)" role="status">Image uploader loads when visible.</p>
+                            }
+                            <small class="text-(--exile-text-muted)">JPEG, PNG, or WebP; maximum {{ maxImageSizeLabel }} per image.
+                                {{ imageCount('auction', null) }} of {{ maxAuctionImages }} images selected.</small>
+                            @if (imageCount('auction', null) > maxAuctionImages) {
+                            <p class="text-(--exile-text-error)" role="alert">Remove an image before adding another.</p>
+                            }
+                        </div>
                         }
 
                         <label class="grid gap-[0.4rem]">
@@ -124,6 +157,36 @@
                                         formControlName="description" rows="3"
                                         placeholder="Item stats, condition, etc."></textarea>
                                 </label>
+                                <div class="grid gap-2">
+                                    <span class="font-bold text-(--exile-text)">Item images (up to {{ maxAuctionImages }})</span>
+                                    @for (image of existingImagesFor(item.controls.id.value ?? null); track image.id) {
+                                    <div class="flex items-center gap-3">
+                                        <img class="size-16 rounded border border-(--exile-border) object-cover"
+                                            [src]="image.public_url"
+                                            [alt]="'Image ' + (image.sort_order + 1) + ' of ' + item.controls.title.value" />
+                                        <button
+                                            class="relative min-h-10.5 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+                                            type="button" (click)="removeExistingImage(image.id)"
+                                            [disabled]="isSubmitting()">
+                                            Remove image
+                                        </button>
+                                    </div>
+                                    }
+                                    @defer (on viewport) {
+                                    <app-auction-image-uploader
+                                        [disabled]="isSubmitting()"
+                                        (filesChange)="onImageFilesChanged($event, item.controls.imageKey.value)" />
+                                    } @placeholder {
+                                    <p class="text-(--exile-text-muted)" role="status">Image uploader loads when visible.</p>
+                                    }
+                                    <small class="text-(--exile-text-muted)">JPEG, PNG, or WebP; maximum {{ maxImageSizeLabel }} per
+                                        image. {{ imageCount(item.controls.imageKey.value, item.controls.id.value ?? null) }}
+                                        of {{ maxAuctionImages }} selected.</small>
+                                    @if (imageCount(item.controls.imageKey.value, item.controls.id.value ?? null) > maxAuctionImages) {
+                                    <p class="text-(--exile-text-error)" role="alert">Remove an image before adding
+                                        another.</p>
+                                    }
+                                </div>
                                 <button
                                     class="relative min-h-10.5 min-w-22 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55 max-[520px]:col-span-full max-[520px]:justify-self-start"
                                     type="button" (click)="removeItem($index)" [disabled]="itemControls.length <= 2">
@@ -153,7 +216,8 @@
                     </button>
                     <button
                         class="relative min-h-10.5 min-w-37.5 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
-                        type="submit" [disabled]="isSubmitting() || isCheckingBidVisibilityLock()">
+                        type="submit"
+                        [disabled]="isSubmitting() || isCheckingBidVisibilityLock() || isLoadingImages() || !!imageLoadError() || imageLimitExceeded()">
                         {{ isSubmitting() ? 'Saving...' : auction ? 'Save Changes' : 'Create Auction' }}
                     </button>
                 </footer>

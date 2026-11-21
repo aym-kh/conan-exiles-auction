@@ -1,0 +1,40 @@
+@if (currentImage(); as image) {
+<section class="image-gallery" aria-label="Auction item images">
+  <button type="button" class="gallery-main" (click)="openLightbox()"
+    [attr.aria-label]="'View larger image: ' + imageAlt()">
+    <img [src]="image.public_url" [alt]="imageAlt()" loading="lazy" decoding="async" />
+  </button>
+
+  @if (images().length > 1) {
+  <div class="gallery-thumbnails" role="group" aria-label="Choose an image">
+    @for (thumbnail of images(); track thumbnail.id; let index = $index) {
+    <button type="button" class="gallery-thumbnail" [class.selected]="activeIndex() === index"
+      [attr.aria-label]="'Show image ' + (index + 1)" [attr.aria-pressed]="activeIndex() === index"
+      (click)="selectImage(index)">
+      <img [src]="thumbnail.public_url" [alt]="imageAlt() + ', image ' + (index + 1)" loading="lazy" decoding="async" />
+    </button>
+    }
+  </div>
+  }
+</section>
+
+<dialog #lightbox class="gallery-lightbox" (click)="onLightboxClick($event)"
+  (keydown)="onLightboxKeydown($event)">
+  @if (currentImage(); as lightboxImage) {
+  <div class="lightbox-content">
+    <header>
+      <h2>{{ imageAlt() }}</h2>
+      <button type="button" class="lightbox-button" (click)="closeLightbox()" aria-label="Close image viewer">Close</button>
+    </header>
+    <img class="lightbox-image" [src]="lightboxImage.public_url" [alt]="imageAlt()" />
+    @if (images().length > 1) {
+    <nav class="lightbox-controls" aria-label="Image navigation">
+      <button type="button" class="lightbox-button" (click)="showPrevious()" aria-label="Previous image">Previous</button>
+      <span>{{ activeIndex() + 1 }} / {{ images().length }}</span>
+      <button type="button" class="lightbox-button" (click)="showNext()" aria-label="Next image">Next</button>
+    </nav>
+    }
+  </div>
+  }
+</dialog>
+}

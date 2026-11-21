@@ -31,6 +31,21 @@ export interface IAuctionItem {
     created_at: string;
 }
 
+export interface IAuctionImage {
+    id: string;
+    auction_id: string;
+    item_id: string | null;
+    storage_path: string;
+    sort_order: number;
+    created_at: string;
+    public_url: string;
+}
+
+export interface IAuctionImageUpload {
+    item_id: string | null;
+    file: Blob;
+}
+
 export interface IAuctionItemInput {
     id?: string;
     title: string;

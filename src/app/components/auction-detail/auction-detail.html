@@ -23,11 +23,15 @@
         }
       </header>
 
+      @if (imageError()) {
+      <p class="bid-error" role="alert">{{ imageError() }}</p>
+      }
 
       @if (!currentAuction.items?.length) {
       <p class="auction-description">
         {{ currentAuction.description || 'No description provided.' }}
       </p>
+      <app-auction-image-gallery [images]="imagesForItem(null)" [imageAlt]="currentAuction.title" />
       }
 
       @if (currentAuction.items?.length) {
@@ -37,6 +41,7 @@
         <article class="auction-item">
           <h4>{{ item.title }}</h4>
           <p>{{ item.description || 'No description provided.' }}</p>
+          <app-auction-image-gallery [images]="imagesForItem(item.id)" [imageAlt]="item.title" />
         </article>
         }
       </section>
