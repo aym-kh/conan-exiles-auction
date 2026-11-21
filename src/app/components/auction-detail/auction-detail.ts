@@ -92,6 +92,19 @@ export class AuctionDetail implements OnInit, OnDestroy {
       && new Date(auction.end_time).getTime() > this.now();
   });
 
+  protected readonly bidVisibilityDescription = computed(() => {
+    switch (this.auction()?.bid_visibility) {
+      case 'open':
+        return 'Everyone can see bidder names and offer amounts while bidding is open.';
+      case 'anonymous':
+        return 'Offer amounts are visible while bidder names stay hidden.';
+      case 'sealed':
+        return 'Offers and bidder names stay hidden while active. Bidders can revise offers until bidding closes; final offers are then revealed without names.';
+      default:
+        return '';
+    }
+  });
+
   protected readonly sealedOfferCountMessage = computed(() => {
     const count = this.sealedOfferCount();
     const scope = this.auction()?.items?.length ? 'for this item' : 'for this auction';
