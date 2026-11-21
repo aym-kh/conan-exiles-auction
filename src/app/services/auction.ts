@@ -101,6 +101,22 @@ export class Auction {
         return data ?? [];
     }
 
+    async isBidVisibilityLocked(auctionId: string): Promise<boolean> {
+        const { data, error } = await this.client.rpc('is_auction_bid_visibility_locked', {
+            p_auction_id: auctionId,
+        });
+
+        if (error) {
+            console.error(`Error checking bidding format lock for auction ${auctionId}:`, error);
+            throw error;
+        }
+        if (typeof data !== 'boolean') {
+            throw new Error('Bidding format lock status was invalid.');
+        }
+
+        return data;
+    }
+
     async placeBid(
         auctionId: string,
         currencySymbol: string,

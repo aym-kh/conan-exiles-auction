@@ -43,6 +43,7 @@ export class AuctionDetail implements OnInit, OnDestroy {
   protected readonly showEditModal = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly bidError = signal<string | null>(null);
+  protected readonly bidSubmissionMessage = signal<string | null>(null);
 
   async ngOnInit() {
     this.expirationTimer = setInterval(() => this.now.set(Date.now()), 1000);
@@ -69,6 +70,14 @@ export class AuctionDetail implements OnInit, OnDestroy {
   protected readonly isAuctionExpired = computed(() => {
     const auction = this.auction();
     return !!auction && new Date(auction.end_time).getTime() <= this.now();
+  });
+
+  protected readonly isSealedBiddingActive = computed(() => {
+    const auction = this.auction();
+    return !!auction
+      && auction.bid_visibility === 'sealed'
+      && auction.status === 'ACTIVE'
+      && new Date(auction.end_time).getTime() > this.now();
   });
 
   protected readonly bidForm = this.fb.group({
@@ -169,8 +178,12 @@ export class AuctionDetail implements OnInit, OnDestroy {
     const { currencySymbol, amount } = this.bidForm.getRawValue();
     this.isPlacingBid.set(true);
     this.bidError.set(null);
+    this.bidSubmissionMessage.set(null);
     try {
       await this.auctionService.placeBid(auction.id, currencySymbol, amount, this.selectedItemId());
+      if (auction.bid_visibility === 'sealed') {
+        this.bidSubmissionMessage.set('Your sealed offer has been recorded. You can revise it until bidding closes.');
+      }
       await this.loadBids(auction.id);
     } catch (error) {
       console.error(`Failed to place bid on auction ${auction.id}:`, error);
@@ -184,6 +197,7 @@ export class AuctionDetail implements OnInit, OnDestroy {
     const target = event.target;
     if (target instanceof HTMLSelectElement) {
       this.selectedItemId.set(target.value || null);
+      this.bidSubmissionMessage.set(null);
     }
   }
 

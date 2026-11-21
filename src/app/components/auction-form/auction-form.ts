@@ -3,7 +3,7 @@ import { Component, inject, Input, OnInit, output, signal } from '@angular/core'
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
-import { IAuction, IAuctionCurrency, ICreateAuctionPayload } from '../../types';
+import { IAuction, IAuctionCurrency, ICreateAuctionPayload, TBidVisibility } from '../../types';
 import { AUCTION_CURRENCIES, MULTI_ITEM_AUCTION_TITLE } from '../../const';
 
 type AuctionItemFormGroup = FormGroup<{
@@ -34,6 +34,8 @@ export class AuctionForm implements OnInit {
   closeModal = output<void>();
   isSubmitting = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
+  bidVisibilityLocked = signal(false);
+  isCheckingBidVisibilityLock = signal(false);
   readonly auctionCurrencyOptions = AUCTION_CURRENCIES;
   // Default end time: 24 hours from now (formatted for datetime-local input)
   private defaultEndTime(): string {
@@ -44,14 +46,14 @@ export class AuctionForm implements OnInit {
   form = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
     description: [''],
-    is_blind: [false],
+    bid_visibility: this.fb.control<TBidVisibility>('open', [Validators.required]),
     has_multiple_items: [false],
     items: this.fb.array<AuctionItemFormGroup>([]),
     currencies: this.fb.array([this.createCurrencyGroup()]),
     end_time: [this.defaultEndTime(), [Validators.required]],
   });
 
-  ngOnInit() {
+  async ngOnInit() {
     if (!this.auction) {
       return;
     }
@@ -59,7 +61,7 @@ export class AuctionForm implements OnInit {
     this.form.patchValue({
       title: this.auction.title,
       description: this.auction.description ?? '',
-      is_blind: this.auction.is_blind ?? false,
+      bid_visibility: this.auction.bid_visibility,
       has_multiple_items: !!this.auction.items?.length,
       end_time: this.toLocalDateTimeInput(this.auction.end_time),
     });
@@ -74,6 +76,22 @@ export class AuctionForm implements OnInit {
         symbol: [currency.symbol, [Validators.required]],
         weight: [currency.weight, [Validators.required, Validators.min(1)]],
       }));
+    }
+
+    this.isCheckingBidVisibilityLock.set(true);
+    this.form.controls.bid_visibility.disable();
+    try {
+      const isLocked = await this.auctionService.isBidVisibilityLocked(this.auction.id);
+      this.bidVisibilityLocked.set(isLocked);
+      if (!isLocked) {
+        this.form.controls.bid_visibility.enable();
+      }
+    } catch (error) {
+      console.error(`Failed to check bidding format lock for auction ${this.auction.id}:`, error);
+      this.bidVisibilityLocked.set(true);
+      this.errorMessage.set('Could not verify whether bidding format is locked. The format is disabled for safety.');
+    } finally {
+      this.isCheckingBidVisibilityLock.set(false);
     }
   }
 
@@ -182,7 +200,7 @@ export class AuctionForm implements OnInit {
       const auctionFields = {
         title: this.isMultiItemAuction ? MULTI_ITEM_AUCTION_TITLE : formValues.title.trim(),
         description: this.isMultiItemAuction ? null : formValues.description.trim() || null,
-        is_blind: formValues.is_blind,
+        bid_visibility: formValues.bid_visibility,
         currencies,
         end_time: new Date(formValues.end_time).toISOString(),
         ...(this.isMultiItemAuction ? {

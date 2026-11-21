@@ -27,7 +27,7 @@
                     <thead>
                         <tr>
                             <th scope="col">Auction</th>
-                            <th scope="col">Type</th>
+                            <th scope="col">Format</th>
                             <th scope="col">Time Left</th>
                             <th scope="col">Ends</th>
                         </tr>
@@ -42,7 +42,7 @@
                                     {{ auction.title }}
                                 </button>
                             </td>
-                            <td>{{ auction.is_blind ? 'Blind' : 'Open' }}</td>
+                            <td>{{ auction.bid_visibility | titlecase }}</td>
                             <td><span class="auction-timer" role="timer">{{ remainingTime(auction.end_time) }}</span>
                             </td>
                             <td><time [attr.datetime]="auction.end_time">{{ auction.end_time | date:'short' }}</time>
@@ -84,8 +84,8 @@
                         <dd><time [attr.datetime]="auction.end_time">{{ auction.end_time | date:'medium' }}</time></dd>
                     </div>
                     <div>
-                        <dt>Auction type</dt>
-                        <dd>{{ auction.is_blind ? 'Blind' : 'Open' }}</dd>
+                        <dt>Bidding format</dt>
+                        <dd>{{ auction.bid_visibility | titlecase }}</dd>
                     </div>
                 </dl>
 

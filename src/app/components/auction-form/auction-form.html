@@ -42,9 +42,21 @@
                         </label>
                         }
 
-                        <label class="flex items-center gap-[0.6rem]">
-                            <input class="size-4 accent-(--exile-accent)" type="checkbox" formControlName="is_blind" />
-                            <span>Blind auction</span>
+                        <label class="grid gap-[0.4rem]">
+                            <span class="font-bold text-(--exile-text)">Bidding format *</span>
+                            <select
+                                class="w-full min-w-0 rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-[0.65rem] text-(--exile-text-bright) text-shadow-none focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+                                formControlName="bid_visibility">
+                                <option value="open">Open - names and amounts visible</option>
+                                <option value="anonymous">Anonymous - amounts visible, names hidden</option>
+                                <option value="sealed">Sealed - hidden while active, anonymized after close</option>
+                            </select>
+                            @if (isCheckingBidVisibilityLock()) {
+                            <small class="text-(--exile-text-muted)">Checking whether this format can be
+                                changed…</small>
+                            } @else if (bidVisibilityLocked()) {
+                            <small class="text-(--exile-text-muted)">Locked after the first bid is placed.</small>
+                            }
                         </label>
 
                         <div class="grid gap-3" formArrayName="currencies">
@@ -141,7 +153,7 @@
                     </button>
                     <button
                         class="relative min-h-10.5 min-w-37.5 cursor-pointer border-2 border-transparent bg-[radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)] px-4 py-[0.45rem] text-(--exile-text-button) [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] [text-shadow:1px_1px_2px_rgb(var(--exile-black-rgb))] transition-[filter,transform] duration-180 enabled:hover:-translate-y-px enabled:hover:brightness-[1.18] focus-visible:outline-2 focus-visible:outline-(--exile-text) focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
-                        type="submit" [disabled]="isSubmitting()">
+                        type="submit" [disabled]="isSubmitting() || isCheckingBidVisibilityLock()">
                         {{ isSubmitting() ? 'Saving...' : auction ? 'Save Changes' : 'Create Auction' }}
                     </button>
                 </footer>
