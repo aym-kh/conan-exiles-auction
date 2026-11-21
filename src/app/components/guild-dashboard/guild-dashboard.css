@@ -173,6 +173,14 @@
     overflow-wrap: anywhere;
 }
 
+.auction-item-list {
+    display: grid;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    padding-left: 1.25rem;
+    color: var(--dashboard-muted);
+}
+
 .auction-facts {
     margin-bottom: 1.25rem;
 }

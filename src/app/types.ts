@@ -20,6 +20,21 @@ export interface IAuctionCurrency {
     weight: number;
 }
 
+export interface IAuctionItem {
+    id: string;
+    auction_id: string;
+    title: string;
+    description: string | null;
+    sort_order: number;
+    created_at: string;
+}
+
+export interface IAuctionItemInput {
+    id?: string;
+    title: string;
+    description: string | null;
+}
+
 export interface IAuction {
     id: string;
     guild_id: string | null;
@@ -31,6 +46,7 @@ export interface IAuction {
     status: TAuctionStatus | null;
     end_time: string;
     created_at: string | null;
+    items?: IAuctionItem[];
 }
 
 export interface ICreateAuctionPayload {
@@ -40,15 +56,17 @@ export interface ICreateAuctionPayload {
     is_blind: boolean;
     currencies: IAuctionCurrency[];
     end_time: string;
+    items?: IAuctionItemInput[];
 }
 
 export type IUpdateAuctionPayload = Pick<
     ICreateAuctionPayload,
     'title' | 'description' | 'is_blind' | 'currencies' | 'end_time'
->;
+> & Pick<ICreateAuctionPayload, 'items'>;
 
 export interface IAuctionBid {
     id: string;
+    item_id: string | null;
     bidder_discord_id: string | null;
     bidder_name: string | null;
     bidder_avatar: string | null;

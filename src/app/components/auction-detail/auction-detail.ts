@@ -34,6 +34,7 @@ export class AuctionDetail implements OnInit, OnDestroy {
 
   protected readonly auction = signal<IAuction | null>(null);
   protected readonly bids = signal<IAuctionBid[]>([]);
+  protected readonly selectedItemId = signal<string | null>(null);
   protected readonly currentUserId = signal<string | null>(null);
   protected readonly isOwner = signal(false);
   protected readonly isBidsLoading = signal(false);
@@ -76,10 +77,19 @@ export class AuctionDetail implements OnInit, OnDestroy {
   });
 
   protected readonly currentHighestBid = computed(() =>
-    this.bids().reduce<IAuctionBid | null>(
+    this.selectedItemBids().reduce<IAuctionBid | null>(
       (highest, bid) => !highest || bid.calculated_weight > highest.calculated_weight ? bid : highest,
       null,
     ),
+  );
+
+  protected readonly selectedItemBids = computed(() => {
+    const itemId = this.selectedItemId();
+    return this.bids().filter((bid) => bid.item_id === itemId);
+  });
+
+  protected readonly selectedItemTitle = computed(() =>
+    this.auction()?.items?.find((item) => item.id === this.selectedItemId())?.title ?? '',
   );
 
   protected readonly canBid = computed(() => {
@@ -108,6 +118,7 @@ export class AuctionDetail implements OnInit, OnDestroy {
           this.errorMessage.set('Auction not found.');
           return;
         }
+        this.selectedItemId.set(auction.items?.[0]?.id ?? null);
 
         const user = await this.supabaseService.getCurrentUser();
         this.currentUserId.set(user?.id ?? null);
@@ -143,7 +154,14 @@ export class AuctionDetail implements OnInit, OnDestroy {
   protected async placeBid() {
     const auction = this.auction();
     const userId = this.currentUserId();
-    if (!auction || !userId || !this.canBid() || this.bidForm.invalid || this.isPlacingBid()) {
+    if (
+      !auction
+      || !userId
+      || !this.canBid()
+      || this.bidForm.invalid
+      || this.isPlacingBid()
+      || (auction.items?.length && !this.selectedItemId())
+    ) {
       this.bidForm.markAllAsTouched();
       return;
     }
@@ -152,13 +170,20 @@ export class AuctionDetail implements OnInit, OnDestroy {
     this.isPlacingBid.set(true);
     this.bidError.set(null);
     try {
-      await this.auctionService.placeBid(auction.id, currencySymbol, amount);
+      await this.auctionService.placeBid(auction.id, currencySymbol, amount, this.selectedItemId());
       await this.loadBids(auction.id);
     } catch (error) {
       console.error(`Failed to place bid on auction ${auction.id}:`, error);
       this.bidError.set(error instanceof Error ? error.message : 'Could not place your bid.');
     } finally {
       this.isPlacingBid.set(false);
+    }
+  }
+
+  protected selectItem(event: Event) {
+    const target = event.target;
+    if (target instanceof HTMLSelectElement) {
+      this.selectedItemId.set(target.value || null);
     }
   }
 

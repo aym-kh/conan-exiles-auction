@@ -73,6 +73,7 @@
 
 .auction-status,
 .auction-facts dt,
+.auction-items h3,
 .currency-details h3,
 .highest-bid>span {
   color: var(--detail-muted);
@@ -108,6 +109,29 @@
 
 .currency-details h3 {
   margin-bottom: 0.25rem;
+}
+
+.auction-items {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.auction-item,
+.bid-list li {
+  padding: 0.7rem 0.75rem;
+  border: 1px solid rgb(150 116 72 / 35%);
+  background: rgb(var(--exile-panel-rgb) / 65%);
+}
+
+.auction-item h4 {
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.auction-item p {
+  color: var(--detail-muted);
+  overflow-wrap: anywhere;
 }
 
 .currency-row strong {
@@ -160,12 +184,6 @@
   list-style: none;
 }
 
-.bid-list li {
-  padding: 0.7rem 0.75rem;
-  border: 1px solid rgb(150 116 72 / 35%);
-  background: rgb(var(--exile-panel-rgb) / 65%);
-}
-
 .bid-row {
   display: flex;
   justify-content: space-between;
@@ -195,6 +213,10 @@
   display: grid;
   gap: 0.35rem;
   min-width: 0;
+}
+
+.item-select {
+  margin-bottom: 0.75rem;
 }
 
 .bid-field>span {

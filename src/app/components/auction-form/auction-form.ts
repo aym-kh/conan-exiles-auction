@@ -1,10 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, Input, OnInit, output, signal } from '@angular/core';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Auction } from '../../services/auction';
 import { SupabaseService } from '../../services/supabase';
 import { IAuction, IAuctionCurrency, ICreateAuctionPayload } from '../../types';
-import { AUCTION_CURRENCIES } from '../../const';
+import { AUCTION_CURRENCIES, MULTI_ITEM_AUCTION_TITLE } from '../../const';
+
+type AuctionItemFormGroup = FormGroup<{
+  id: FormControl<string | undefined>;
+  title: FormControl<string>;
+  description: FormControl<string>;
+}>;
 
 @Component({
   imports: [
@@ -12,7 +18,6 @@ import { AUCTION_CURRENCIES } from '../../const';
     ReactiveFormsModule,
   ],
   selector: 'app-auction-form',
-  styleUrl: './auction-form.css',
   templateUrl: './auction-form.html',
 })
 export class AuctionForm implements OnInit {
@@ -40,6 +45,8 @@ export class AuctionForm implements OnInit {
     title: ['', [Validators.required, Validators.minLength(3)]],
     description: [''],
     is_blind: [false],
+    has_multiple_items: [false],
+    items: this.fb.array<AuctionItemFormGroup>([]),
     currencies: this.fb.array([this.createCurrencyGroup()]),
     end_time: [this.defaultEndTime(), [Validators.required]],
   });
@@ -53,8 +60,13 @@ export class AuctionForm implements OnInit {
       title: this.auction.title,
       description: this.auction.description ?? '',
       is_blind: this.auction.is_blind ?? false,
+      has_multiple_items: !!this.auction.items?.length,
       end_time: this.toLocalDateTimeInput(this.auction.end_time),
     });
+
+    for (const item of this.auction.items ?? []) {
+      this.itemControls.push(this.createItemGroup(item.id, item.title, item.description ?? ''));
+    }
 
     this.currencyControls.clear();
     for (const currency of this.auction.currencies) {
@@ -75,6 +87,18 @@ export class AuctionForm implements OnInit {
     return this.form.controls.currencies;
   }
 
+  get itemControls(): FormArray<AuctionItemFormGroup> {
+    return this.form.controls.items;
+  }
+
+  get isMultiItemAuction(): boolean {
+    return this.form.controls.has_multiple_items.value;
+  }
+
+  get hasTooFewItems(): boolean {
+    return this.isMultiItemAuction && this.itemControls.length < 2;
+  }
+
   private createCurrencyGroup() {
     return this.fb.group({
       symbol: ['', [Validators.required]],
@@ -92,9 +116,50 @@ export class AuctionForm implements OnInit {
     }
   }
 
+  onMultiItemChange(event: Event) {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    this.form.controls.has_multiple_items.setValue(target.checked);
+    if (target.checked) {
+      this.form.controls.title.clearValidators();
+      this.form.controls.title.updateValueAndValidity();
+      if (this.itemControls.length === 0) {
+        this.addItem();
+        this.addItem();
+      }
+      return;
+    }
+
+    this.form.controls.title.setValidators([Validators.required, Validators.minLength(3)]);
+    this.form.controls.title.updateValueAndValidity();
+    this.itemControls.clear();
+  }
+
+  private createItemGroup(id: string | undefined, title: string, description: string): AuctionItemFormGroup {
+    return this.fb.group({
+      id: [id],
+      title: [title, [Validators.required, Validators.minLength(3)]],
+      description: [description],
+    });
+  }
+
+  addItem() {
+    this.itemControls.push(this.createItemGroup(undefined, '', ''));
+  }
+
+  removeItem(index: number) {
+    if (this.itemControls.length > 2) {
+      this.itemControls.removeAt(index);
+    }
+  }
+
   async onSubmit() {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.hasTooFewItems) {
       this.form.markAllAsTouched();
+      this.itemControls.markAllAsTouched();
       return;
     }
 
@@ -115,11 +180,18 @@ export class AuctionForm implements OnInit {
       }));
 
       const auctionFields = {
-        title: formValues.title.trim(),
-        description: formValues.description.trim() || null,
+        title: this.isMultiItemAuction ? MULTI_ITEM_AUCTION_TITLE : formValues.title.trim(),
+        description: this.isMultiItemAuction ? null : formValues.description.trim() || null,
         is_blind: formValues.is_blind,
         currencies,
         end_time: new Date(formValues.end_time).toISOString(),
+        ...(this.isMultiItemAuction ? {
+          items: formValues.items.map((item) => ({
+            ...(item.id ? { id: item.id } : {}),
+            title: item.title.trim(),
+            description: item.description.trim() || null,
+          })),
+        } : {}),
       };
 
       if (this.auction) {

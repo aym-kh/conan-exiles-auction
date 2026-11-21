@@ -67,7 +67,25 @@ export class Auction {
             throw error;
         }
 
-        return data;
+        return {
+            ...data,
+            items: await this.getAuctionItems(auctionId),
+        };
+    }
+
+    private async getAuctionItems(auctionId: string) {
+        const { data, error } = await this.client
+            .from('auction_items')
+            .select('*')
+            .eq('auction_id', auctionId)
+            .order('sort_order', { ascending: true });
+
+        if (error) {
+            console.error(`Error fetching items for auction ${auctionId}:`, error);
+            throw error;
+        }
+
+        return data ?? [];
     }
 
     async getAuctionBids(auctionId: string): Promise<IAuctionBid[]> {
@@ -83,7 +101,12 @@ export class Auction {
         return data ?? [];
     }
 
-    async placeBid(auctionId: string, currencySymbol: string, amount: number): Promise<void> {
+    async placeBid(
+        auctionId: string,
+        currencySymbol: string,
+        amount: number,
+        itemId: string | null = null,
+    ): Promise<void> {
         const { data: { session }, error: sessionError } = await this.client.auth.getSession();
         if (sessionError) {
             throw sessionError;
@@ -95,6 +118,7 @@ export class Auction {
         const { error } = await this.client.functions.invoke('place-bid', {
             body: {
                 auctionId,
+                itemId,
                 currencySymbol,
                 amount,
                 providerToken: session.provider_token,
@@ -130,9 +154,20 @@ export class Auction {
         payload: IUpdateAuctionPayload,
         userId: string,
     ): Promise<IAuction> {
+        const { items, ...auctionFields } = payload;
+        if (items && items.length < 2) {
+            throw new Error('Multi-item auctions must include at least two items.');
+        }
+        if (items) {
+            const itemIds = items.flatMap((item) => item.id ? [item.id] : []);
+            if (new Set(itemIds).size !== itemIds.length) {
+                throw new Error('An auction item was included more than once.');
+            }
+        }
+
         const { data, error } = await this.client
             .from('auctions')
-            .update(payload)
+            .update(auctionFields)
             .eq('id', auctionId)
             .eq('seller_discord_id', userId)
             .select()
@@ -143,7 +178,74 @@ export class Auction {
             throw error;
         }
 
-        return data;
+        if (items) {
+            const existingItems = await this.getAuctionItems(auctionId);
+            const existingIds = new Set(existingItems.map((item) => item.id));
+            const requestedIds = items.flatMap((item) => item.id ? [item.id] : []);
+            if (requestedIds.some((id) => !existingIds.has(id))) {
+                throw new Error('An auction item no longer exists. Reload the auction and try again.');
+            }
+
+            for (const [index, item] of items.entries()) {
+                if (!item.id) {
+                    continue;
+                }
+
+                const itemId = item.id;
+                const { data: updatedItem, error: itemError } = await this.client
+                    .from('auction_items')
+                    .update({ title: item.title, description: item.description, sort_order: index })
+                    .eq('id', itemId)
+                    .eq('auction_id', auctionId)
+                    .select('id')
+                    .maybeSingle();
+
+                if (itemError) {
+                    console.error(`Error updating item ${itemId} for auction ${auctionId}:`, itemError);
+                    throw itemError;
+                }
+                if (!updatedItem) {
+                    throw new Error('An auction item no longer exists. Reload the auction and try again.');
+                }
+            }
+
+            if (items.some((item) => !item.id)) {
+                const { error: insertError } = await this.client
+                    .from('auction_items')
+                    .insert(items.flatMap((item, index) => item.id ? [] : [{
+                        auction_id: auctionId,
+                        title: item.title,
+                        description: item.description,
+                        sort_order: index,
+                    }]));
+
+                if (insertError) {
+                    console.error(`Error adding items to auction ${auctionId}:`, insertError);
+                    throw insertError;
+                }
+            }
+
+            const removedIds = existingItems
+                .filter((item) => !requestedIds.includes(item.id))
+                .map((item) => item.id);
+            if (removedIds.length > 0) {
+                const { error: deleteError } = await this.client
+                    .from('auction_items')
+                    .delete()
+                    .eq('auction_id', auctionId)
+                    .in('id', removedIds);
+
+                if (deleteError) {
+                    console.error(`Error removing items from auction ${auctionId}:`, deleteError);
+                    throw deleteError;
+                }
+            }
+        }
+
+        return {
+            ...data,
+            ...(items ? { items: await this.getAuctionItems(auctionId) } : {}),
+        };
     }
 
     async deleteAuction(auctionId: string, userId: string): Promise<void> {
@@ -166,11 +268,16 @@ export class Auction {
     }
 
     async createAuction(payload: ICreateAuctionPayload, userDiscordId: string): Promise<IAuction> {
+        const { items, ...auctionFields } = payload;
+        if (items && items.length < 2) {
+            throw new Error('Multi-item auctions must include at least two items.');
+        }
+
         const { data, error } = await this.client
             .from('auctions')
             .insert([
                 {
-                    ...payload,
+                    ...auctionFields,
                     seller_discord_id: userDiscordId,
                     status: 'ACTIVE'
                 }
@@ -183,7 +290,35 @@ export class Auction {
             throw error;
         }
 
-        return data;
+        if (!items?.length) {
+            return data;
+        }
+
+        const { error: itemsError } = await this.client
+            .from('auction_items')
+            .insert(items.map((item, index) => ({
+                auction_id: data.id,
+                title: item.title,
+                description: item.description,
+                sort_order: index,
+            })));
+
+        if (itemsError) {
+            console.error(`Error creating items for auction ${data.id}:`, itemsError);
+            const { error: rollbackError } = await this.client
+                .from('auctions')
+                .delete()
+                .eq('id', data.id);
+            if (rollbackError) {
+                console.error(`Failed to remove incomplete auction ${data.id}:`, rollbackError);
+            }
+            throw itemsError;
+        }
+
+        return {
+            ...data,
+            items: await this.getAuctionItems(data.id),
+        };
     }
 
     async endAuction(auctionId: string): Promise<void> {

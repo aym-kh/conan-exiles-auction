@@ -6,6 +6,8 @@ export const AUCTION_CURRENCIES = [
     { symbol: 'gold_bar', label: 'Gold Bar' },
 ] as const;
 
+export const MULTI_ITEM_AUCTION_TITLE = 'Multi-item auction';
+
 export const SERVER_FEATURE_LABELS = new Map([
     ['COMMUNITY', 'Community'],
     ['VERIFIED', 'Verified'],

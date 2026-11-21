@@ -24,9 +24,23 @@
       </header>
 
 
+      @if (!currentAuction.items?.length) {
       <p class="auction-description">
         {{ currentAuction.description || 'No description provided.' }}
       </p>
+      }
+
+      @if (currentAuction.items?.length) {
+      <section class="auction-items" aria-label="Auction items">
+        <h3>Items</h3>
+        @for (item of currentAuction.items; track item.id) {
+        <article class="auction-item">
+          <h4>{{ item.title }}</h4>
+          <p>{{ item.description || 'No description provided.' }}</p>
+        </article>
+        }
+      </section>
+      }
 
       <dl class="auction-facts">
         <div>
@@ -61,8 +75,25 @@
 
     <section class="bids-panel" aria-labelledby="bids-title">
       <header class="detail-panel-heading">
-        <h2 id="bids-title">Bid History</h2>
+        <h2 id="bids-title">
+          @if (currentAuction.items?.length) {
+          Bid History: {{ selectedItemTitle() }}
+          } @else {
+          Bid History
+          }
+        </h2>
       </header>
+
+      @if (currentAuction.items?.length) {
+      <label class="bid-field item-select">
+        <span>Bid on item</span>
+        <select [value]="selectedItemId() ?? ''" (change)="selectItem($event)" aria-label="Auction item">
+          @for (item of currentAuction.items; track item.id) {
+          <option [value]="item.id">{{ item.title }}</option>
+          }
+        </select>
+      </label>
+      }
 
       @if (currentHighestBid(); as highestBid) {
       <div class="highest-bid">
@@ -79,9 +110,9 @@
 
       @if (isBidsLoading()) {
       <p class="details-message" role="status">Loading bids...</p>
-      } @else if (bids().length > 0) {
+      } @else if (selectedItemBids().length > 0) {
       <ol class="bid-list">
-        @for (bid of bids(); track bid.id) {
+        @for (bid of selectedItemBids(); track bid.id) {
         <li>
           <div class="bid-row">
             <strong>{{ bid.bidder_name ?? 'Anonymous bidder' }}</strong>
