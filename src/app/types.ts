@@ -13,6 +13,8 @@ export interface DiscordGuild {
 
 export type TAuctionStatus = 'DRAFT' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
 
+export type TBidVisibility = 'open' | 'anonymous' | 'sealed';
+
 export type AuctionCurrencySymbol = (typeof AUCTION_CURRENCIES)[number]['symbol'];
 
 export interface IAuctionCurrency {
@@ -41,7 +43,7 @@ export interface IAuction {
     seller_discord_id: string;
     title: string;
     description: string | null;
-    is_blind: boolean | null;
+    bid_visibility: TBidVisibility;
     currencies: IAuctionCurrency[];
     status: TAuctionStatus | null;
     end_time: string;
@@ -53,7 +55,7 @@ export interface ICreateAuctionPayload {
     guild_id: string | null;
     title: string;
     description: string | null;
-    is_blind: boolean;
+    bid_visibility: TBidVisibility;
     currencies: IAuctionCurrency[];
     end_time: string;
     items?: IAuctionItemInput[];
@@ -61,7 +63,7 @@ export interface ICreateAuctionPayload {
 
 export type IUpdateAuctionPayload = Pick<
     ICreateAuctionPayload,
-    'title' | 'description' | 'is_blind' | 'currencies' | 'end_time'
+    'title' | 'description' | 'bid_visibility' | 'currencies' | 'end_time'
 > & Pick<ICreateAuctionPayload, 'items'>;
 
 export interface IAuctionBid {

@@ -29,6 +29,17 @@ describe('AuctionForm', () => {
     expect(component).toBeTruthy();
   });
 
+  it('supports open, anonymous, and sealed bidding formats', () => {
+    fixture.detectChanges();
+
+    const formatControl = component.form.controls.bid_visibility;
+    expect(formatControl.value).toBe('open');
+    formatControl.setValue('anonymous');
+    expect(formatControl.value).toBe('anonymous');
+    formatControl.setValue('sealed');
+    expect(formatControl.value).toBe('sealed');
+  });
+
   it('starts a multi-item auction with two required item forms', () => {
     setMultiItemMode(true);
 

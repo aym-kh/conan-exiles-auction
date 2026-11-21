@@ -52,6 +52,30 @@ export class Auction {
         return data || [];
     }
 
+    async getGuildCompletedSealedAuctions(
+        guildId: string,
+        page: number,
+        pageSize: number,
+    ): Promise<{ auctions: IAuction[]; total: number }> {
+        const from = (page - 1) * pageSize;
+        const now = new Date().toISOString();
+        const { data, count, error } = await this.client
+            .from('auctions')
+            .select('*', { count: 'exact' })
+            .eq('guild_id', guildId)
+            .eq('bid_visibility', 'sealed')
+            .or(`status.eq.ENDED,and(status.eq.ACTIVE,end_time.lte.${now})`)
+            .order('end_time', { ascending: false })
+            .range(from, from + pageSize - 1);
+
+        if (error) {
+            console.error(`Error fetching completed sealed auctions for guild ${guildId}:`, error);
+            throw error;
+        }
+
+        return { auctions: data ?? [], total: count ?? 0 };
+    }
+
     async getAuctionById(auctionId: string): Promise<IAuction | null> {
         const { data, error } = await this.client
             .from('auctions')
@@ -99,6 +123,39 @@ export class Auction {
         }
 
         return data ?? [];
+    }
+
+    async getAuctionBidCount(auctionId: string, itemId: string | null): Promise<number> {
+        const { data, error } = await this.client.rpc('get_auction_bid_count', {
+            p_auction_id: auctionId,
+            p_item_id: itemId,
+        });
+
+        if (error) {
+            console.error(`Error fetching bid count for auction ${auctionId}:`, error);
+            throw error;
+        }
+        if (typeof data !== 'number' || !Number.isInteger(data) || data < 0) {
+            throw new Error('Bid count response was invalid.');
+        }
+
+        return data;
+    }
+
+    async isBidVisibilityLocked(auctionId: string): Promise<boolean> {
+        const { data, error } = await this.client.rpc('is_auction_bid_visibility_locked', {
+            p_auction_id: auctionId,
+        });
+
+        if (error) {
+            console.error(`Error checking bidding format lock for auction ${auctionId}:`, error);
+            throw error;
+        }
+        if (typeof data !== 'boolean') {
+            throw new Error('Bidding format lock status was invalid.');
+        }
+
+        return data;
     }
 
     async placeBid(
