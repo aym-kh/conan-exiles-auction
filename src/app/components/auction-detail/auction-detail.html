@@ -98,10 +98,11 @@
       @if (currentHighestBid(); as highestBid) {
       <div class="highest-bid">
         <span>Current Highest</span>
-        <strong>{{ highestBid.amount }}
+        <strong class="flex items-center gap-1">
+          {{ highestBid.amount }}
           <span class="currency-name">
             <img class="currency-icon" [src]="currencyIconPath(highestBid.currency_symbol)" alt="" aria-hidden="true" />
-            <span>{{ currencyLabel(highestBid.currency_symbol) }}</span>
+            <small>{{ currencyLabel(highestBid.currency_symbol) }}</small>
           </span>
         </strong>
         <small>Weight {{ highestBid.calculated_weight }}</small>
@@ -118,10 +119,11 @@
         <li>
           <div class="bid-row">
             <strong>{{ bid.bidder_name ?? 'Anonymous bidder' }}</strong>
-            <span>{{ bid.amount }}
+            <span class="flex items-center gap-1">
+              {{ bid.amount }}
               <span class="currency-name">
                 <img class="currency-icon" [src]="currencyIconPath(bid.currency_symbol)" alt="" aria-hidden="true" />
-                <span>{{ currencyLabel(bid.currency_symbol) }}</span>
+                <small>{{ currencyLabel(bid.currency_symbol) }}</small>
               </span>
             </span>
           </div>
