@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Auction } from '../../services/auction';
 import { LoadingService } from '../../services/loading';
 import { IAuction } from '../../types';
@@ -24,17 +24,26 @@ import { AUCTION_CURRENCIES, SCREEN_TITLES } from '../../const';
 })
 export class GuildDashboard implements OnInit, OnDestroy {
 
+  private readonly completedAuctionsPageSize = 10;
   private readonly auctionService = inject(Auction);
   protected readonly loadingService = inject(LoadingService);
   @Input() guildId!: string;
 
   protected readonly auctions = signal<IAuction[]>([]);
+  protected readonly completedSealedAuctions = signal<IAuction[]>([]);
+  protected readonly completedSealedAuctionsTotal = signal(0);
+  protected readonly completedSealedAuctionsPage = signal(1);
+  protected readonly isCompletedAuctionsLoading = signal(false);
+  protected readonly completedAuctionsError = signal<string | null>(null);
   protected readonly selectedAuctionId = signal<string | null>(null);
   protected readonly selectedAuction = signal<IAuction | null>(null);
   protected readonly isDetailsLoading = signal(false);
   protected readonly listError = signal<string | null>(null);
   protected readonly detailsError = signal<string | null>(null);
   protected readonly showCreateModal = signal(false);
+  protected readonly completedAuctionsPageCount = computed(() =>
+    Math.max(1, Math.ceil(this.completedSealedAuctionsTotal() / this.completedAuctionsPageSize)),
+  );
   protected readonly auctionCurrencies = AUCTION_CURRENCIES;
   private readonly now = signal(Date.now());
   private countdownInterval: ReturnType<typeof setInterval> | null = null;
@@ -58,6 +67,7 @@ export class GuildDashboard implements OnInit, OnDestroy {
       try {
         const data = await this.auctionService.getGuildAuctions(this.guildId);
         this.auctions.set(data);
+        await this.loadCompletedSealedAuctions(1);
 
         const selected = data.find((auction) => auction.id === this.selectedAuctionId()) ?? data[0];
         if (!selected) {
@@ -89,6 +99,27 @@ export class GuildDashboard implements OnInit, OnDestroy {
 
   protected remainingTime(endTime: string): string {
     return formatCountdown(endTime, this.now());
+  }
+
+  protected async loadCompletedSealedAuctions(page: number) {
+    this.isCompletedAuctionsLoading.set(true);
+    this.completedAuctionsError.set(null);
+
+    try {
+      const result = await this.auctionService.getGuildCompletedSealedAuctions(
+        this.guildId,
+        page,
+        this.completedAuctionsPageSize,
+      );
+      this.completedSealedAuctions.set(result.auctions);
+      this.completedSealedAuctionsTotal.set(result.total);
+      this.completedSealedAuctionsPage.set(page);
+    } catch (error) {
+      console.error(`Failed to load completed sealed auctions for guild ${this.guildId}:`, error);
+      this.completedAuctionsError.set('Could not load completed sealed auctions. Please try again.');
+    } finally {
+      this.isCompletedAuctionsLoading.set(false);
+    }
   }
 
   protected async onAuctionCreated() {

@@ -52,6 +52,30 @@ export class Auction {
         return data || [];
     }
 
+    async getGuildCompletedSealedAuctions(
+        guildId: string,
+        page: number,
+        pageSize: number,
+    ): Promise<{ auctions: IAuction[]; total: number }> {
+        const from = (page - 1) * pageSize;
+        const now = new Date().toISOString();
+        const { data, count, error } = await this.client
+            .from('auctions')
+            .select('*', { count: 'exact' })
+            .eq('guild_id', guildId)
+            .eq('bid_visibility', 'sealed')
+            .or(`status.eq.ENDED,and(status.eq.ACTIVE,end_time.lte.${now})`)
+            .order('end_time', { ascending: false })
+            .range(from, from + pageSize - 1);
+
+        if (error) {
+            console.error(`Error fetching completed sealed auctions for guild ${guildId}:`, error);
+            throw error;
+        }
+
+        return { auctions: data ?? [], total: count ?? 0 };
+    }
+
     async getAuctionById(auctionId: string): Promise<IAuction | null> {
         const { data, error } = await this.client
             .from('auctions')

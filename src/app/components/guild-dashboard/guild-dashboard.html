@@ -19,7 +19,8 @@
             @if (!loadingService.isLoading()) {
             @if (listError()) {
             <p class="dashboard-error" role="alert">{{ listError() }}</p>
-            } @else if (auctions().length === 0) {
+            } @else {
+            @if (auctions().length === 0) {
             <p class="empty-state">No active auctions for this server yet.</p>
             } @else {
             <div class="auction-table-wrap">
@@ -52,6 +53,63 @@
                     </tbody>
                 </table>
             </div>
+            }
+
+            <section class="completed-auctions border-t border-(--exile-border) pt-4"
+                aria-labelledby="completed-auctions-title">
+                <header class="flex items-center justify-between gap-3">
+                    <h3 id="completed-auctions-title">Completed Sealed Auctions</h3>
+                    <span class="auction-count">{{ completedSealedAuctionsTotal() }}</span>
+                </header>
+
+                @if (completedAuctionsError()) {
+                <p class="dashboard-error" role="alert">{{ completedAuctionsError() }}</p>
+                } @else if (isCompletedAuctionsLoading()) {
+                <p class="details-message" role="status">Loading completed auctions...</p>
+                } @else if (completedSealedAuctions().length === 0) {
+                <p class="empty-state">No completed sealed auctions yet.</p>
+                } @else {
+                <div class="auction-table-wrap">
+                    <table class="auction-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Auction</th>
+                                <th scope="col">Ended</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (auction of completedSealedAuctions(); track auction.id) {
+                            <tr>
+                                <td>
+                                    <a class="auction-select block" [routerLink]="['/auctions', auction.id]">
+                                        {{ auction.title }}
+                                    </a>
+                                </td>
+                                <td><time [attr.datetime]="auction.end_time">{{ auction.end_time | date:'short' }}</time>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (completedSealedAuctionsTotal() > 10) {
+                <nav class="flex items-center justify-center gap-3" aria-label="Completed auction pages">
+                    <button type="button" class="refresh-button"
+                        [disabled]="isCompletedAuctionsLoading() || completedSealedAuctionsPage() === 1"
+                        (click)="loadCompletedSealedAuctions(completedSealedAuctionsPage() - 1)">
+                        Previous
+                    </button>
+                    <span>Page {{ completedSealedAuctionsPage() }} of {{ completedAuctionsPageCount() }}</span>
+                    <button type="button" class="refresh-button"
+                        [disabled]="isCompletedAuctionsLoading() || completedSealedAuctionsPage() === completedAuctionsPageCount()"
+                        (click)="loadCompletedSealedAuctions(completedSealedAuctionsPage() + 1)">
+                        Next
+                    </button>
+                </nav>
+                }
+                }
+            </section>
             }
             }
         </section>
