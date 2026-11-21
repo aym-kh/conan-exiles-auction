@@ -12,6 +12,8 @@ interface NotificationRow {
   id: string;
   auction_id: string;
   attempts: number;
+  event_type: 'auction_created' | 'bid_placed';
+  bid_id: string | null;
 }
 
 interface AuctionRecord {
@@ -31,10 +33,19 @@ interface AuctionItemRecord {
   sort_order: number;
 }
 
-interface AuctionImageRecord {
+interface BidRecord {
   item_id: string | null;
-  storage_path: string;
-  sort_order: number;
+  bidder_discord_id: string;
+  currency_symbol: string;
+  amount: number;
+  calculated_weight: number;
+  is_sealed_offer: boolean;
+  bidder_name?: string | null;
+  bidder_avatar?: string | null;
+}
+
+interface AuctionItemTitle {
+  title: string;
 }
 
 interface CurrencyRecord {
@@ -43,6 +54,7 @@ interface CurrencyRecord {
 }
 
 type DispatchResult = 'sent' | 'retrying' | 'failed' | 'skipped';
+type NotificationEventType = 'auction_created' | 'bid_placed';
 
 const response = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -56,6 +68,9 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isUuid = (value: unknown): value is string =>
   typeof value === 'string'
   && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+const isNotificationEventType = (value: unknown): value is NotificationEventType =>
+  value === 'auction_created' || value === 'bid_placed';
 
 const truncate = (value: string, maximumLength: number): string =>
   value.length > maximumLength ? `${value.slice(0, maximumLength - 1)}…` : value;
@@ -114,6 +129,67 @@ const formatAuctionEmbed = (
   };
 };
 
+const formatBidEmbed = (
+  auction: AuctionRecord,
+  bid: BidRecord,
+  item: AuctionItemTitle | null,
+  imageUrl: string | null,
+) => {
+  const bidderName = auction.bid_visibility === 'open'
+    ? bid.bidder_name?.trim() || 'A bidder'
+    : 'Anonymous bidder';
+  const endTimestamp = Math.floor(new Date(auction.end_time).getTime() / 1000);
+  const fields: Array<{ name: string; value: string; inline?: boolean }> = [
+    {
+      name: 'Bid',
+      value: `${bid.amount} ${formatCurrency(bid.currency_symbol)} (weight ${bid.calculated_weight})`,
+      inline: true,
+    },
+    {
+      name: 'Bidding format',
+      value: auction.bid_visibility === 'open' ? 'Open' : 'Anonymous',
+      inline: true,
+    },
+  ];
+  if (item) {
+    fields.push({ name: 'Item', value: truncate(item.title, 1024) });
+  }
+  if (Number.isFinite(endTimestamp)) {
+    fields.push({ name: 'Auction ends', value: `<t:${endTimestamp}:R>`, inline: true });
+  }
+
+  return {
+    title: truncate(`New bid on ${auction.title}`, 256),
+    description: `${truncate(bidderName, 256)} placed a bid.`,
+    color: 0xb88d51,
+    fields,
+    ...(imageUrl ? { image: { url: imageUrl } } : {}),
+    ...(auction.bid_visibility === 'open' && bid.bidder_avatar
+      ? { thumbnail: { url: bid.bidder_avatar } }
+      : {}),
+    footer: { text: 'Conan Exiles Auction' },
+  };
+};
+
+async function getAuctionImageUrl(
+  adminClient: ReturnType<typeof createClient>,
+  auctionId: string,
+): Promise<string | null> {
+  const { data: image, error } = await adminClient
+    .from('auction_images')
+    .select('storage_path')
+    .eq('auction_id', auctionId)
+    .order('sort_order', { ascending: true })
+    .limit(1)
+    .maybeSingle() as { data: { storage_path: string } | null; error: { message: string } | null };
+  if (error) {
+    throw error;
+  }
+  return image
+    ? adminClient.storage.from('auction-images').getPublicUrl(image.storage_path).data.publicUrl
+    : null;
+}
+
 async function updateOutbox(
   adminClient: ReturnType<typeof createClient>,
   notificationId: string,
@@ -148,14 +224,14 @@ async function retryNotification(
 async function dispatchNotification(
   adminClient: ReturnType<typeof createClient>,
   notification: NotificationRow,
-  sellerDiscordId: string,
+  authUserId: string,
+  discordUserId: string,
   discordGuildIds: Set<string>,
 ): Promise<DispatchResult> {
   const { data: auction, error: auctionError } = await adminClient
     .from('auctions')
     .select('id, guild_id, seller_discord_id, title, description, status, bid_visibility, end_time, currencies')
     .eq('id', notification.auction_id)
-    .eq('seller_discord_id', sellerDiscordId)
     .maybeSingle() as { data: AuctionRecord | null; error: { message: string } | null };
   if (auctionError) {
     throw auctionError;
@@ -165,6 +241,14 @@ async function dispatchNotification(
       status: 'skipped',
       claimed_at: null,
       last_error: 'Auction is no longer available to its seller.',
+    });
+    return 'skipped';
+  }
+  if (notification.event_type === 'auction_created' && auction.seller_discord_id !== authUserId) {
+    await updateOutbox(adminClient, notification.id, {
+      status: 'skipped',
+      claimed_at: null,
+      last_error: 'Only the auction creator can dispatch its creation notification.',
     });
     return 'skipped';
   }
@@ -212,28 +296,80 @@ async function dispatchNotification(
     return 'failed';
   }
 
-  const [{ data: itemsData, error: itemsError }, { data: imagesData, error: imagesError }] = await Promise.all([
-    adminClient
+  let embed: ReturnType<typeof formatAuctionEmbed> | ReturnType<typeof formatBidEmbed>;
+  if (notification.event_type === 'auction_created') {
+    if (notification.bid_id) {
+      await updateOutbox(adminClient, notification.id, {
+        status: 'skipped',
+        claimed_at: null,
+        last_error: 'Auction notification unexpectedly referenced a bid.',
+      });
+      return 'skipped';
+    }
+
+    const { data: itemsData, error: itemsError } = await adminClient
       .from('auction_items')
       .select('title, sort_order')
       .eq('auction_id', auction.id)
-      .order('sort_order', { ascending: true }),
-    adminClient
-      .from('auction_images')
-      .select('item_id, storage_path, sort_order')
-      .eq('auction_id', auction.id)
-      .order('sort_order', { ascending: true }),
-  ]);
-  if (itemsError || imagesError) {
-    throw itemsError ?? imagesError;
-  }
+      .order('sort_order', { ascending: true }) as { data: AuctionItemRecord[] | null; error: { message: string } | null };
+    if (itemsError) {
+      throw itemsError;
+    }
+    embed = formatAuctionEmbed(auction, itemsData ?? [], await getAuctionImageUrl(adminClient, auction.id));
+  } else {
+    if (!notification.bid_id || auction.bid_visibility === 'sealed') {
+      await updateOutbox(adminClient, notification.id, {
+        status: 'skipped',
+        claimed_at: null,
+        last_error: 'Sealed bids are never sent as live notifications.',
+      });
+      return 'skipped';
+    }
 
-  const items = (itemsData ?? []) as AuctionItemRecord[];
-  const images = (imagesData ?? []) as AuctionImageRecord[];
-  const image = images.find((entry) => entry.item_id === null) ?? images[0];
-  const imageUrl = image
-    ? adminClient.storage.from('auction-images').getPublicUrl(image.storage_path).data.publicUrl
-    : null;
+    const bidColumns = auction.bid_visibility === 'open'
+      ? 'item_id, bidder_discord_id, currency_symbol, amount, calculated_weight, is_sealed_offer, bidder_name, bidder_avatar'
+      : 'item_id, bidder_discord_id, currency_symbol, amount, calculated_weight, is_sealed_offer';
+    const { data: bid, error: bidError } = await adminClient
+      .from('bids')
+      .select(bidColumns)
+      .eq('id', notification.bid_id)
+      .eq('auction_id', auction.id)
+      .maybeSingle() as { data: BidRecord | null; error: { message: string } | null };
+    if (bidError) {
+      throw bidError;
+    }
+    if (!bid || bid.is_sealed_offer) {
+      await updateOutbox(adminClient, notification.id, {
+        status: 'skipped',
+        claimed_at: null,
+        last_error: 'Bid is not eligible for a live notification.',
+      });
+      return 'skipped';
+    }
+    if (auction.seller_discord_id !== authUserId && bid.bidder_discord_id !== discordUserId) {
+      await updateOutbox(adminClient, notification.id, {
+        status: 'skipped',
+        claimed_at: null,
+        last_error: 'Only the auction creator or bid author can dispatch this notification.',
+      });
+      return 'skipped';
+    }
+
+    let item: AuctionItemTitle | null = null;
+    if (bid.item_id) {
+      const { data: itemData, error: itemError } = await adminClient
+        .from('auction_items')
+        .select('title')
+        .eq('id', bid.item_id)
+        .eq('auction_id', auction.id)
+        .maybeSingle() as { data: AuctionItemTitle | null; error: { message: string } | null };
+      if (itemError) {
+        throw itemError;
+      }
+      item = itemData;
+    }
+    embed = formatBidEmbed(auction, bid, item, await getAuctionImageUrl(adminClient, auction.id));
+  }
 
   webhook.searchParams.set('wait', 'true');
   const controller = new AbortController();
@@ -244,7 +380,7 @@ async function dispatchNotification(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        embeds: [formatAuctionEmbed(auction, items, imageUrl)],
+        embeds: [embed],
         allowed_mentions: { parse: [] },
       }),
       redirect: 'manual',
@@ -271,7 +407,6 @@ async function dispatchNotification(
       adminClient,
       notification,
       `Discord rejected the notification (${webhookResponse.status}).`,
-      webhookResponse.status === 429 ? 60 : 0,
     );
     return 'retrying';
   }
@@ -299,7 +434,27 @@ Deno.serve(async (request: Request) => {
   } catch {
     return response(400, { error: 'Request body must be valid JSON.' });
   }
-  if (!isRecord(parsedBody) || (parsedBody['auctionId'] !== undefined && !isUuid(parsedBody['auctionId']))) {
+  if (!isRecord(parsedBody)) {
+    return response(400, { error: 'Invalid notification dispatch request.' });
+  }
+  const auctionIdValue = parsedBody['auctionId'];
+  const eventTypeValue = parsedBody['eventType'];
+  const bidIdValue = parsedBody['bidId'];
+  if (
+    (auctionIdValue !== undefined && !isUuid(auctionIdValue))
+    || (eventTypeValue !== undefined && !isNotificationEventType(eventTypeValue))
+    || (bidIdValue !== undefined && !isUuid(bidIdValue))
+  ) {
+    return response(400, { error: 'Invalid notification dispatch request.' });
+  }
+  const auctionId = typeof auctionIdValue === 'string' ? auctionIdValue : null;
+  const eventType = isNotificationEventType(eventTypeValue) ? eventTypeValue : null;
+  const bidId = typeof bidIdValue === 'string' ? bidIdValue : null;
+  if (
+    (eventType !== null && auctionId === null)
+    || (bidId !== null && (eventType !== 'bid_placed' || auctionId === null))
+    || (eventType === 'bid_placed' && bidId === null)
+  ) {
     return response(400, { error: 'Invalid notification dispatch request.' });
   }
   const providerTokenValue = parsedBody['providerToken'];
@@ -311,7 +466,6 @@ Deno.serve(async (request: Request) => {
     return response(400, { error: 'A valid Discord session is required.' });
   }
   const providerToken = providerTokenValue;
-  const auctionId = typeof parsedBody['auctionId'] === 'string' ? parsedBody['auctionId'] : null;
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
@@ -362,7 +516,8 @@ Deno.serve(async (request: Request) => {
     ?? user.user_metadata?.['provider_id']
     ?? user.user_metadata?.['sub']
     ?? user.user_metadata?.['id'];
-  if (!discordUser['id'] || typeof linkedDiscordId !== 'string' || linkedDiscordId !== discordUser['id']) {
+  const discordUserId = discordUser['id'];
+  if (!discordUserId || typeof linkedDiscordId !== 'string' || linkedDiscordId !== discordUserId) {
     return response(403, { error: 'The Discord account must match the account used to sign in.' });
   }
 
@@ -378,10 +533,13 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data: notifications, error: claimError } = await adminClient
-    .rpc('claim_discord_notification_outbox', {
-      p_seller_discord_id: user.id,
+    .rpc('claim_discord_notification_events', {
+      p_auth_user_id: user.id,
+      p_discord_user_id: discordUserId,
       p_limit: 5,
       p_auction_id: auctionId,
+      p_event_type: eventType,
+      p_bid_id: bidId,
     }) as { data: NotificationRow[] | null; error: { message: string } | null };
   if (claimError) {
     console.error('Failed to claim Discord notifications:', claimError.message);
@@ -391,7 +549,13 @@ Deno.serve(async (request: Request) => {
   const counts = { sent: 0, retrying: 0, failed: 0, skipped: 0 };
   for (const notification of notifications ?? []) {
     try {
-      const result = await dispatchNotification(adminClient, notification, user.id, discordGuildIds);
+      const result = await dispatchNotification(
+        adminClient,
+        notification,
+        user.id,
+        discordUserId,
+        discordGuildIds,
+      );
       counts[result]++;
     } catch (error) {
       console.error(`Failed to dispatch Discord notification ${notification.id}:`, error);
@@ -405,20 +569,22 @@ Deno.serve(async (request: Request) => {
     }
   }
 
-  let pendingQuery = adminClient
-    .from('discord_notification_outbox')
-    .select('id, auctions!inner(seller_discord_id)', { count: 'exact', head: true })
-    .eq('event_type', 'auction_created')
-    .in('status', ['pending', 'processing', 'failed'])
-    .eq('auctions.seller_discord_id', user.id);
-  if (auctionId) {
-    pendingQuery = pendingQuery.eq('auction_id', auctionId);
-  }
-  const { count: pending, error: pendingError } = await pendingQuery;
+  const { data: pending, error: pendingError } = await adminClient
+    .rpc('count_discord_notification_events', {
+      p_auth_user_id: user.id,
+      p_discord_user_id: discordUserId,
+      p_auction_id: auctionId,
+      p_event_type: eventType,
+      p_bid_id: bidId,
+    });
   if (pendingError) {
     console.error('Failed to count pending Discord notifications:', pendingError.message);
     return response(500, { error: 'Could not check pending Discord notifications.' });
   }
+  if (typeof pending !== 'number' || !Number.isSafeInteger(pending)) {
+    console.error('Pending Discord notification count was invalid.');
+    return response(500, { error: 'Could not check pending Discord notifications.' });
+  }
 
-  return response(200, { ...counts, pending: pending ?? 0 });
+  return response(200, { ...counts, pending });
 });
