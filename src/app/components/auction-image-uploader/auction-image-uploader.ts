@@ -44,7 +44,7 @@ export class AuctionImageUploader {
     disabled: this.disabled(),
   }));
 
-  protected onFilesChanged(files: FilePondFile[]) {
-    this.filesChange.emit(files);
+  onFilesChanged(event: { items: FilePondFile[] }) {
+    this.filesChange.emit(event.items);
   }
 }
