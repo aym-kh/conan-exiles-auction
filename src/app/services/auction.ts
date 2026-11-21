@@ -4,10 +4,26 @@ import {
     DiscordGuild,
     IAuction,
     IAuctionBid,
+    IAuctionImage,
+    IAuctionImageUpload,
     ICreateAuctionPayload,
     IUpdateAuctionPayload,
 } from '../types';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import {
+    AUCTION_IMAGE_MAX_COUNT,
+    AUCTION_IMAGE_MAX_SIZE_BYTES,
+    AUCTION_IMAGE_MAX_SIZE_LABEL,
+} from '../const';
+
+const AUCTION_IMAGE_BUCKET = 'auction-images';
+const AUCTION_IMAGE_STAGING_BUCKET = 'auction-image-staging';
+const AUCTION_IMAGE_TYPES: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+};
+type AuctionImageRow = Omit<IAuctionImage, 'public_url'>;
 
 @Service()
 export class Auction {
@@ -110,6 +126,304 @@ export class Auction {
         }
 
         return data ?? [];
+    }
+
+    async getAuctionImages(auctionId: string): Promise<IAuctionImage[]> {
+        const { data, error } = await this.client
+            .from('auction_images')
+            .select('*')
+            .eq('auction_id', auctionId)
+            .order('sort_order', { ascending: true });
+
+        if (error) {
+            console.error(`Error fetching images for auction ${auctionId}:`, error);
+            throw error;
+        }
+
+        return (data ?? []).map((image) => ({
+            ...image,
+            public_url: this.client.storage.from(AUCTION_IMAGE_BUCKET).getPublicUrl(image.storage_path).data.publicUrl,
+        }));
+    }
+
+    async uploadStagedAuctionImage(file: Blob): Promise<string> {
+        const extension = AUCTION_IMAGE_TYPES[file.type];
+        if (!extension) {
+            throw new Error('Images must be JPEG, PNG, or WebP files.');
+        }
+        if (file.size > AUCTION_IMAGE_MAX_SIZE_BYTES) {
+            throw new Error(`Each image must be ${AUCTION_IMAGE_MAX_SIZE_LABEL.replace('MB', ' MB')} or smaller.`);
+        }
+
+        const userId = await this.getAuthenticatedUserId();
+        const path = `${userId}/${crypto.randomUUID()}.${extension}`;
+        const { error } = await this.client.storage
+            .from(AUCTION_IMAGE_STAGING_BUCKET)
+            .upload(path, file, { contentType: file.type, upsert: false });
+        if (error) {
+            console.error('Error uploading staged auction image:', error);
+            throw error;
+        }
+        return path;
+    }
+
+    async removeStagedAuctionImage(path: string): Promise<void> {
+        const userId = await this.getAuthenticatedUserId();
+        if (!this.isStagedAuctionImagePath(path, userId)) {
+            throw new Error('The staged image path is invalid.');
+        }
+
+        const { error } = await this.client.storage.from(AUCTION_IMAGE_STAGING_BUCKET).remove([path]);
+        if (error) {
+            console.error('Error removing staged auction image:', error);
+            throw error;
+        }
+    }
+
+    async syncAuctionImages(
+        auctionId: string,
+        previousImages: IAuctionImage[],
+        retainedImageIds: string[],
+        uploads: IAuctionImageUpload[],
+        onUploadProgress?: (completed: number, total: number) => void,
+    ): Promise<void> {
+        const stagedPaths = uploads.flatMap((upload) => upload.staged_path ? [upload.staged_path] : []);
+        if (stagedPaths.length > 0) {
+            const userId = await this.getAuthenticatedUserId();
+            if (stagedPaths.some((path) => !this.isStagedAuctionImagePath(path, userId))) {
+                throw new Error('A staged auction image is invalid. Remove it and upload it again.');
+            }
+        }
+
+        if (previousImages.some((image) =>
+            image.auction_id !== auctionId || !image.storage_path.startsWith(`${auctionId}/`))) {
+            throw new Error('The selected auction images are invalid. Reload the auction and try again.');
+        }
+        const uniqueRetainedIds = new Set(retainedImageIds);
+        if (uniqueRetainedIds.size !== retainedImageIds.length
+            || retainedImageIds.some((id) => !previousImages.some((image) => image.id === id))) {
+            throw new Error('The selected auction images are invalid. Reload the auction and try again.');
+        }
+
+        const { data: currentRows, error: currentRowsError } = await this.client
+            .from('auction_images')
+            .select('*')
+            .eq('auction_id', auctionId);
+        if (currentRowsError) {
+            console.error(`Error checking existing images for auction ${auctionId}:`, currentRowsError);
+            throw currentRowsError;
+        }
+        if ((currentRows ?? []).some((image) => !image.storage_path.startsWith(`${auctionId}/`))) {
+            throw new Error('An auction image has an invalid storage path. Contact support before editing images.');
+        }
+
+        const currentById = new Map<string, AuctionImageRow>(
+            (currentRows ?? []).map((image) => [image.id, image]),
+        );
+        for (const id of retainedImageIds) {
+            if (!currentById.has(id)) {
+                throw new Error('An auction image has changed. Reload the auction and try again.');
+            }
+        }
+
+        const itemRows = await this.getAuctionItems(auctionId);
+        const itemIds = new Set(itemRows.map((item) => item.id));
+        const counts = new Map<string, number>();
+        const groupKey = (itemId: string | null) => itemId ?? 'auction';
+        const retainedRows = retainedImageIds.flatMap((id) => {
+            const image = currentById.get(id);
+            return image ? [image] : [];
+        });
+
+        for (const image of retainedRows) {
+            if (
+                itemIds.size > 0
+                    ? image.item_id === null || !itemIds.has(image.item_id)
+                    : image.item_id !== null
+            ) {
+                throw new Error('An image is linked to an item that no longer exists.');
+            }
+            const key = groupKey(image.item_id);
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+
+        for (const upload of uploads) {
+            if (!AUCTION_IMAGE_TYPES[upload.file.type]) {
+                throw new Error('Images must be JPEG, PNG, or WebP files.');
+            }
+            if (upload.file.size > AUCTION_IMAGE_MAX_SIZE_BYTES) {
+                throw new Error(`Each image must be ${AUCTION_IMAGE_MAX_SIZE_LABEL.replace('MB', ' MB')} or smaller.`);
+            }
+            if ((upload.item_id === null && itemIds.size > 0)
+                || (upload.item_id !== null && !itemIds.has(upload.item_id))) {
+                throw new Error('An image is linked to an invalid auction item.');
+            }
+            const key = groupKey(upload.item_id);
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+
+        if ([...counts.values()].some((count) => count > AUCTION_IMAGE_MAX_COUNT)) {
+            throw new Error(`Each item can have up to ${AUCTION_IMAGE_MAX_COUNT} images.`);
+        }
+
+        const uploadedPaths: string[] = [];
+        const insertedImageIds: string[] = [];
+        const newRows: Array<Omit<AuctionImageRow, 'id' | 'created_at'>> = [];
+        try {
+            const nextSortOrder = new Map<string, number>();
+            for (const image of retainedRows) {
+                const key = groupKey(image.item_id);
+                nextSortOrder.set(key, Math.max(nextSortOrder.get(key) ?? 0, image.sort_order + 1));
+            }
+
+            let completedUploads = 0;
+            for (const upload of uploads) {
+                const extension = AUCTION_IMAGE_TYPES[upload.file.type];
+                const path = `${auctionId}/${upload.item_id ?? 'auction'}/${crypto.randomUUID()}.${extension}`;
+                uploadedPaths.push(path);
+                const { error } = upload.staged_path
+                    ? await this.client.storage
+                        .from(AUCTION_IMAGE_STAGING_BUCKET)
+                        .copy(upload.staged_path, path, { destinationBucket: AUCTION_IMAGE_BUCKET })
+                    : await this.client.storage
+                        .from(AUCTION_IMAGE_BUCKET)
+                        .upload(path, upload.file, { contentType: upload.file.type, upsert: false });
+                if (error) {
+                    console.error(`Error uploading auction image for ${auctionId}:`, error);
+                    throw error;
+                }
+                completedUploads++;
+                onUploadProgress?.(completedUploads, uploads.length);
+
+                const key = groupKey(upload.item_id);
+                newRows.push({
+                    auction_id: auctionId,
+                    item_id: upload.item_id,
+                    storage_path: path,
+                    sort_order: nextSortOrder.get(key) ?? 0,
+                });
+                nextSortOrder.set(key, (nextSortOrder.get(key) ?? 0) + 1);
+            }
+
+            if (newRows.length > 0) {
+                const { data, error } = await this.client
+                    .from('auction_images')
+                    .insert(newRows)
+                    .select('id');
+                if (error) {
+                    console.error(`Error saving image records for auction ${auctionId}:`, error);
+                    throw error;
+                }
+                insertedImageIds.push(...(data ?? []).map((image) => image.id));
+            }
+        } catch (error) {
+            await this.cleanupAuctionImageFiles(auctionId, uploadedPaths);
+            throw error;
+        }
+
+        const obsoletePaths = new Set<string>();
+        for (const image of previousImages) {
+            if (!uniqueRetainedIds.has(image.id)) {
+                obsoletePaths.add(image.storage_path);
+            }
+        }
+        const obsoleteCurrentIds: string[] = [];
+        for (const image of currentRows ?? []) {
+            if (!uniqueRetainedIds.has(image.id)) {
+                obsoletePaths.add(image.storage_path);
+                obsoleteCurrentIds.push(image.id);
+            }
+        }
+
+        try {
+            await this.removeAuctionImageFiles(auctionId, [...obsoletePaths]);
+        } catch (error) {
+            await this.removeAuctionImageRecords(auctionId, insertedImageIds);
+            await this.cleanupAuctionImageFiles(auctionId, uploadedPaths);
+            throw error;
+        }
+
+        if (obsoleteCurrentIds.length > 0) {
+            const { error } = await this.client
+                .from('auction_images')
+                .delete()
+                .eq('auction_id', auctionId)
+                .in('id', obsoleteCurrentIds);
+            if (error) {
+                console.error(`Error removing old image records for auction ${auctionId}:`, error);
+                throw error;
+            }
+        }
+
+        if (stagedPaths.length > 0) {
+            try {
+                await this.removeStagedAuctionImages(stagedPaths);
+            } catch (error) {
+                console.error('Auction images were saved, but staged image cleanup failed:', error);
+            }
+        }
+    }
+
+    private async getAuthenticatedUserId(): Promise<string> {
+        const { data: { user }, error } = await this.client.auth.getUser();
+        if (error) {
+            throw error;
+        }
+        if (!user) {
+            throw new Error('Your sign-in session has expired. Sign in again to manage auction images.');
+        }
+        return user.id;
+    }
+
+    private isStagedAuctionImagePath(path: string, userId: string): boolean {
+        const prefix = `${userId}/`;
+        const filename = path.slice(prefix.length);
+        return path.startsWith(prefix)
+            && /^[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(filename);
+    }
+
+    private async removeStagedAuctionImages(paths: string[]): Promise<void> {
+        if (paths.length === 0) {
+            return;
+        }
+        const { error } = await this.client.storage.from(AUCTION_IMAGE_STAGING_BUCKET).remove(paths);
+        if (error) {
+            console.error('Error removing staged auction images:', error);
+            throw error;
+        }
+    }
+
+    private async removeAuctionImageFiles(auctionId: string, paths: string[]): Promise<void> {
+        if (paths.length === 0) {
+            return;
+        }
+        const { error } = await this.client.storage.from(AUCTION_IMAGE_BUCKET).remove(paths);
+        if (error) {
+            console.error(`Error removing image files for auction ${auctionId}:`, error);
+            throw error;
+        }
+    }
+
+    private async cleanupAuctionImageFiles(auctionId: string, paths: string[]): Promise<void> {
+        try {
+            await this.removeAuctionImageFiles(auctionId, paths);
+        } catch (error) {
+            console.error(`Could not clean up new image files for auction ${auctionId}:`, error);
+        }
+    }
+
+    private async removeAuctionImageRecords(auctionId: string, imageIds: string[]): Promise<void> {
+        if (imageIds.length === 0) {
+            return;
+        }
+        const { error } = await this.client
+            .from('auction_images')
+            .delete()
+            .eq('auction_id', auctionId)
+            .in('id', imageIds);
+        if (error) {
+            console.error(`Error cleaning up image records for auction ${auctionId}:`, error);
+        }
     }
 
     async getAuctionBids(auctionId: string): Promise<IAuctionBid[]> {
@@ -306,6 +620,9 @@ export class Auction {
     }
 
     async deleteAuction(auctionId: string, userId: string): Promise<void> {
+        const images = await this.getAuctionImages(auctionId);
+        await this.removeAuctionImageFiles(auctionId, images.map((image) => image.storage_path));
+
         const { data, error } = await this.client
             .from('auctions')
             .delete()

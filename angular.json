@@ -29,8 +29,16 @@
                 "output": "."
               }
             ],
+            "allowedCommonJsDependencies": [
+              "filepond",
+              "filepond-plugin-image-preview",
+              "filepond-plugin-file-validate-type",
+              "filepond-plugin-file-validate-size"
+            ],
             "styles": [
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/filepond/dist/filepond.min.css",
+              "node_modules/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css"
             ]
           },
           "configurations": {

@@ -1,0 +1,54 @@
+.auction-image-uploader .filepond--panel-root {
+  border: 1px dashed var(--exile-border-field);
+  background-color: rgb(var(--exile-bg-rgb) / 88%);
+}
+
+.auction-image-uploader .filepond--drop-label {
+  color: var(--exile-text-muted);
+}
+
+.auction-image-uploader .filepond--drop-label label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 6rem;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  color: var(--exile-text-muted);
+  text-align: center;
+}
+
+.auction-image-uploader .filepond--label-action {
+  display: inline-block;
+  border: 1px solid var(--exile-border);
+  padding: 0.2rem 0.8rem;
+  color: var(--exile-text-bright);
+  text-decoration: none;
+}
+
+.auction-image-uploader .filepond--action-process-item {
+  background-color: var(--exile-accent);
+  color: var(--exile-bg);
+  cursor: pointer;
+}
+
+.auction-image-uploader .filepond--action-process-item:hover,
+.auction-image-uploader .filepond--action-process-item:focus-visible {
+  filter: brightness(1.2);
+}
+
+.auction-image-uploader .filepond--drop-label label:hover .filepond--label-action {
+  filter: brightness(1.2);
+}
+
+.auction-image-uploader .filepond--item-panel {
+  background-color: rgb(var(--exile-panel-rgb) / 95%);
+}
+
+.auction-image-uploader .filepond--file-info-main,
+.auction-image-uploader .filepond--file-info-sub,
+.auction-image-uploader .filepond--file-status-main,
+.auction-image-uploader .filepond--file-status-sub {
+  color: var(--exile-text-bright);
+}
