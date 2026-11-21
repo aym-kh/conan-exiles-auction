@@ -56,6 +56,7 @@ export class AuctionForm implements OnInit {
   isCheckingBidVisibilityLock = signal(false);
   isLoadingImages = signal(false);
   imageLoadError = signal<string | null>(null);
+  protected readonly imageUploadProgress = signal<{ completed: number; total: number } | null>(null);
   readonly auctionCurrencyOptions = AUCTION_CURRENCIES;
   readonly maxAuctionImages = AUCTION_IMAGE_MAX_COUNT;
   readonly maxImageSizeLabel = AUCTION_IMAGE_MAX_SIZE_LABEL.replace('MB', ' MB');
@@ -294,6 +295,7 @@ export class AuctionForm implements OnInit {
       return (this.imageFiles()[this.auctionImageKey] ?? []).map((pondFile) => ({
         item_id: null,
         file: pondFile.file,
+        ...(pondFile.serverId ? { staged_path: pondFile.serverId } : {}),
       }));
     }
 
@@ -305,6 +307,7 @@ export class AuctionForm implements OnInit {
       return (this.imageFiles()[item.controls.imageKey.value] ?? []).map((pondFile) => ({
         item_id: itemId,
         file: pondFile.file,
+        ...(pondFile.serverId ? { staged_path: pondFile.serverId } : {}),
       }));
     });
   }
@@ -377,11 +380,14 @@ export class AuctionForm implements OnInit {
       }
 
       this.updateItemIds(savedAuction);
+      const imageUploads = this.getImageUploads(savedAuction);
+      this.imageUploadProgress.set(imageUploads.length > 0 ? { completed: 0, total: imageUploads.length } : null);
       await this.auctionService.syncAuctionImages(
         savedAuction.id,
         this.auctionImages(),
         this.getRetainedImageIds(savedAuction),
-        this.getImageUploads(savedAuction),
+        imageUploads,
+        (completed, total) => this.imageUploadProgress.set({ completed, total }),
       );
 
       if (isEditMode) {
@@ -397,6 +403,7 @@ export class AuctionForm implements OnInit {
           : err instanceof Error ? err.message : 'Failed to save auction. Please try again.',
       );
     } finally {
+      this.imageUploadProgress.set(null);
       this.isSubmitting.set(false);
     }
   }

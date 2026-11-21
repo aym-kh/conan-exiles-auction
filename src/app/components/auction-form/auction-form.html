@@ -20,6 +20,18 @@
             @if (imageLoadError()) {
             <p class="mb-4 text-(--exile-text-error)" role="alert">{{ imageLoadError() }}</p>
             }
+            @if (isSubmitting()) {
+            <div class="mb-4 rounded border border-(--exile-border) bg-[rgb(var(--exile-panel-rgb)/80%)] p-3 text-(--exile-text-muted)"
+                role="status" aria-live="polite">
+                @if (imageUploadProgress(); as progress) {
+                <p>Saving auction and uploading images: {{ progress.completed }} of {{ progress.total }} complete.</p>
+                <progress class="mt-2 h-2 w-full accent-(--exile-accent)" [value]="progress.completed"
+                    [max]="progress.total" aria-label="Image upload progress"></progress>
+                } @else {
+                Saving auction and images…
+                }
+            </div>
+            }
 
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
                 <label class="flex items-center gap-[0.6rem]">
@@ -48,7 +60,12 @@
                         </label>
 
                         <div class="grid gap-2">
-                            <span class="font-bold text-(--exile-text)">Item images (up to {{ maxAuctionImages }})</span>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-bold text-(--exile-text)">Item images</span>
+                                <span class="rounded border border-(--exile-border) px-2 py-1 text-sm text-(--exile-text-muted)">
+                                    {{ imageCount('auction', null) }}/{{ maxAuctionImages }} images
+                                </span>
+                            </div>
                             @for (image of existingImagesFor(null); track image.id) {
                             <div class="flex items-center gap-3">
                                 <img class="size-16 rounded border border-(--exile-border) object-cover"
@@ -62,13 +79,15 @@
                             }
                             @defer (on viewport) {
                             <app-auction-image-uploader
-                                [disabled]="isSubmitting()"
+                                [existingCount]="existingImagesFor(null).length"
+                                [disabled]="isSubmitting() || isLoadingImages() || !!imageLoadError()"
                                 (filesChange)="onImageFilesChanged($event, 'auction')" />
                             } @placeholder {
-                            <p class="text-(--exile-text-muted)" role="status">Image uploader loads when visible.</p>
+                            <div class="min-h-24 rounded border border-dashed border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/70%)] p-4 text-(--exile-text-muted)"
+                                role="status">Preparing image picker…</div>
                             }
-                            <small class="text-(--exile-text-muted)">JPEG, PNG, or WebP; maximum {{ maxImageSizeLabel }} per image.
-                                {{ imageCount('auction', null) }} of {{ maxAuctionImages }} images selected.</small>
+                            <small class="text-(--exile-text-muted)">Choose one or several JPEG, PNG, or WebP images (up to
+                                {{ maxImageSizeLabel }} each), then use each image’s upload action. Save the auction once to attach them.</small>
                             @if (imageCount('auction', null) > maxAuctionImages) {
                             <p class="text-(--exile-text-error)" role="alert">Remove an image before adding another.</p>
                             }
@@ -158,7 +177,12 @@
                                         placeholder="Item stats, condition, etc."></textarea>
                                 </label>
                                 <div class="grid gap-2">
-                                    <span class="font-bold text-(--exile-text)">Item images (up to {{ maxAuctionImages }})</span>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-bold text-(--exile-text)">Item images</span>
+                                        <span class="rounded border border-(--exile-border) px-2 py-1 text-sm text-(--exile-text-muted)">
+                                            {{ imageCount(item.controls.imageKey.value, item.controls.id.value ?? null) }}/{{ maxAuctionImages }} images
+                                        </span>
+                                    </div>
                                     @for (image of existingImagesFor(item.controls.id.value ?? null); track image.id) {
                                     <div class="flex items-center gap-3">
                                         <img class="size-16 rounded border border-(--exile-border) object-cover"
@@ -174,14 +198,15 @@
                                     }
                                     @defer (on viewport) {
                                     <app-auction-image-uploader
-                                        [disabled]="isSubmitting()"
+                                        [existingCount]="existingImagesFor(item.controls.id.value ?? null).length"
+                                        [disabled]="isSubmitting() || isLoadingImages() || !!imageLoadError()"
                                         (filesChange)="onImageFilesChanged($event, item.controls.imageKey.value)" />
                                     } @placeholder {
-                                    <p class="text-(--exile-text-muted)" role="status">Image uploader loads when visible.</p>
+                                    <div class="min-h-24 rounded border border-dashed border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/70%)] p-4 text-(--exile-text-muted)"
+                                        role="status">Preparing image picker…</div>
                                     }
-                                    <small class="text-(--exile-text-muted)">JPEG, PNG, or WebP; maximum {{ maxImageSizeLabel }} per
-                                        image. {{ imageCount(item.controls.imageKey.value, item.controls.id.value ?? null) }}
-                                        of {{ maxAuctionImages }} selected.</small>
+                                    <small class="text-(--exile-text-muted)">Choose one or several JPEG, PNG, or WebP images (up to
+                                        {{ maxImageSizeLabel }} each), then use each image’s upload action. Save the auction once to attach them.</small>
                                     @if (imageCount(item.controls.imageKey.value, item.controls.id.value ?? null) > maxAuctionImages) {
                                     <p class="text-(--exile-text-error)" role="alert">Remove an image before adding
                                         another.</p>

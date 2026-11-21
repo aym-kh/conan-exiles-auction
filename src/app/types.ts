@@ -44,6 +44,7 @@ export interface IAuctionImage {
 export interface IAuctionImageUpload {
     item_id: string | null;
     file: Blob;
+    staged_path?: string;
 }
 
 export interface IAuctionItemInput {
