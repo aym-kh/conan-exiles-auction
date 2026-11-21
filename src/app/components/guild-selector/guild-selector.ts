@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
 import { LoadingService } from '../../services/loading';
@@ -7,6 +7,7 @@ import { DiscordGuild } from '../../types';
 import { Router } from '@angular/router';
 import { Title } from '../ui/title/title';
 import { SCREEN_TITLES, SERVER_FEATURE_LABELS } from '../../const';
+import { DiscordWebhookSettings } from '../discord-webhook-settings/discord-webhook-settings';
 
 @Component({
   selector: 'app-guild-selector',
@@ -14,6 +15,7 @@ import { SCREEN_TITLES, SERVER_FEATURE_LABELS } from '../../const';
   imports: [
     CommonModule,
     Title,
+    DiscordWebhookSettings,
   ],
   templateUrl: './guild-selector.html',
   styleUrl: './guild-selector.css'
@@ -28,6 +30,7 @@ export class GuildSelector implements OnInit {
   protected guilds = signal<DiscordGuild[]>([]);
   protected selectedGuild = signal<DiscordGuild | null>(null);
   protected errorMessage = signal<string | null>(null);
+  protected readonly showDiscordSettingsModal = signal(false);
 
   protected titleContent = SCREEN_TITLES.guilds_screen;
 
@@ -44,6 +47,11 @@ export class GuildSelector implements OnInit {
   protected selectGuild(guild: DiscordGuild) {
     this.errorMessage.set(null);
     this.selectedGuild.set(guild);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected closeDiscordSettingsModal() {
+    this.showDiscordSettingsModal.set(false);
   }
 
   protected async joinSelectedGuild() {

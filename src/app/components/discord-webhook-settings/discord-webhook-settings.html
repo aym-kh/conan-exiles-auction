@@ -1,0 +1,46 @@
+<div class="grid gap-3">
+    @if (isConfigured()) {
+    <span class="w-fit rounded border border-(--exile-border) px-2 py-1 text-sm text-(--exile-text-muted)">Connected</span>
+    }
+    @if (isLoading()) {
+    <p class="text-(--exile-text-muted)" role="status">Checking webhook settings...</p>
+    } @else if (canConfigure()) {
+    <p class="text-(--exile-text-muted)">
+        Connect a Discord channel by pasting its webhook URL. We send a test message before saving and never show the URL again.
+    </p>
+
+    @if (errorMessage()) {
+    <p class="rounded border border-(--exile-border-error) bg-[rgb(var(--exile-error-bg-rgb)/85%)] p-2 text-(--exile-text-error)"
+        role="alert">{{ errorMessage() }}</p>
+    }
+    @if (statusMessage()) {
+    <p class="text-(--exile-text-muted)" role="status">{{ statusMessage() }}</p>
+    }
+
+    <label class="grid gap-1">
+        <span class="font-bold text-(--exile-text)">{{ isConfigured() ? 'Replace webhook URL' : 'Discord webhook URL' }}</span>
+        <input
+            class="w-full min-w-0 rounded-xs border border-(--exile-border-field) bg-[rgb(var(--exile-bg-rgb)/88%)] px-3 py-2 text-(--exile-text-bright) text-shadow-none placeholder:text-(--exile-text-muted) focus:outline-2 focus:outline-(--exile-border-focus) focus:outline-offset-1"
+            type="url" autocomplete="off" autocapitalize="off" spellcheck="false"
+            placeholder="https://discord.com/api/webhooks/..." [value]="webhookUrl()"
+            (input)="onWebhookUrlInput($event)" [disabled]="isBusy()" />
+    </label>
+
+    <div class="flex flex-wrap gap-2">
+        <button
+            class="min-h-10 cursor-pointer border border-(--exile-border) bg-[linear-gradient(180deg,var(--exile-button-top),var(--exile-button-bottom))] px-4 py-2 text-(--exile-text-button) enabled:hover:brightness-125 focus-visible:outline-2 focus-visible:outline-(--exile-border-focus) disabled:cursor-not-allowed disabled:opacity-55"
+            type="button" (click)="saveWebhook()" [disabled]="isBusy() || !webhookUrl().trim()">
+            {{ isBusy() ? 'Testing webhook...' : 'Test and save' }}
+        </button>
+        @if (isConfigured()) {
+        <button
+            class="min-h-10 cursor-pointer border border-(--exile-border-field) px-4 py-2 text-(--exile-text-muted) enabled:hover:brightness-125 focus-visible:outline-2 focus-visible:outline-(--exile-border-focus) disabled:cursor-not-allowed disabled:opacity-55"
+            type="button" (click)="removeWebhook()" [disabled]="isBusy()">
+            Disable notifications
+        </button>
+        }
+    </div>
+    } @else {
+    <p class="text-(--exile-text-error)" role="alert">{{ errorMessage() }}</p>
+    }
+</div>

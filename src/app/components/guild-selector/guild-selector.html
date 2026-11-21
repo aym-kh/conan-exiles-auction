@@ -83,6 +83,11 @@
             <button type="button" class="join-button" (click)="joinSelectedGuild()">
                 Get In
             </button>
+            @if (guild.owner) {
+            <button type="button" class="join-button mt-3" (click)="showDiscordSettingsModal.set(true)">
+                Discord Notifications
+            </button>
+            }
         </div>
         } @else {
         <p class="empty-details">Select a server to view its details.</p>
@@ -90,3 +95,28 @@
         }
     </aside>
 </main>
+
+@if (showDiscordSettingsModal()) {
+<div class="fixed inset-0 z-1000 flex items-center justify-center overflow-y-auto bg-black/75 p-4 max-[520px]:p-2"
+    (click)="closeDiscordSettingsModal()">
+    <section
+        class="relative isolate max-h-full w-full max-w-180 overflow-y-auto border-[3px] border-transparent [background:radial-gradient(ellipse_at_center,#25292a_0%,#151819_100%)_padding-box,var(--exile-button-frame)_border-box] shadow-[0_16px_48px_rgb(var(--exile-black-rgb)/80%)] before:pointer-events-none before:absolute before:inset-0.75 before:-z-10 before:mix-blend-overlay before:opacity-[0.28] before:[background-image:var(--exile-stone-grain)] before:content-['']"
+        role="dialog" aria-modal="true" aria-labelledby="discord-settings-title" (click)="$event.stopPropagation()">
+        <div class="relative p-[clamp(1.25rem,4vw,2rem)]">
+            <header class="mb-6 flex items-center justify-between gap-4">
+                <h2 id="discord-settings-title" class="text-[clamp(1.25rem,4vw,1.75rem)] text-(--exile-text)">
+                    Discord Notifications
+                </h2>
+                <button type="button"
+                    class="min-h-10 cursor-pointer border border-(--exile-border-field) px-4 py-2 text-(--exile-text-muted) enabled:hover:brightness-125 focus-visible:outline-2 focus-visible:outline-(--exile-border-focus)"
+                    (click)="closeDiscordSettingsModal()" aria-label="Close Discord notification settings">
+                    Close
+                </button>
+            </header>
+            @if (selectedGuild(); as guild) {
+            <app-discord-webhook-settings [discordGuildId]="guild.id"></app-discord-webhook-settings>
+            }
+        </div>
+    </section>
+</div>
+}
