@@ -11,6 +11,9 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+### Fixed
+- Changed the changelog (what's new) window size so it's not blocking the login button 
+
 ## [3.2.0] - 2026-11-22
 
 ### Added
