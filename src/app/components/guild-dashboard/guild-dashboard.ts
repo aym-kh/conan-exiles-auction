@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Auction } from '../../services/auction';
+import { DiscordNotifications } from '../../services/discord-notifications';
 import { LoadingService } from '../../services/loading';
 import { IAuction } from '../../types';
 import { formatCountdown } from '../../utils/countdown';
@@ -26,6 +27,7 @@ export class GuildDashboard implements OnInit, OnDestroy {
 
   private readonly completedAuctionsPageSize = 10;
   private readonly auctionService = inject(Auction);
+  private readonly discordNotifications = inject(DiscordNotifications);
   protected readonly loadingService = inject(LoadingService);
   @Input() guildId!: string;
 
@@ -40,6 +42,7 @@ export class GuildDashboard implements OnInit, OnDestroy {
   protected readonly isDetailsLoading = signal(false);
   protected readonly listError = signal<string | null>(null);
   protected readonly detailsError = signal<string | null>(null);
+  protected readonly notificationMessage = signal<string | null>(null);
   protected readonly showCreateModal = signal(false);
   protected readonly completedAuctionsPageCount = computed(() =>
     Math.max(1, Math.ceil(this.completedSealedAuctionsTotal() / this.completedAuctionsPageSize)),
@@ -83,6 +86,34 @@ export class GuildDashboard implements OnInit, OnDestroy {
         this.listError.set('Could not load auctions for this server. Please try again.');
       }
     });
+    await this.retryPendingNotifications();
+  }
+
+  private async retryPendingNotifications() {
+    this.notificationMessage.set(null);
+    try {
+      const result = await this.discordNotifications.dispatchPendingNotifications();
+      if (result.failed > 0) {
+        this.notificationMessage.set(
+          'Some Discord notifications could not be delivered. Check the server webhook settings.',
+        );
+      } else if (result.retrying > 0) {
+        this.notificationMessage.set(
+          'Some Discord notifications are temporarily delayed. Refresh the server page to retry later.',
+        );
+      } else if (result.pending > 0) {
+        this.notificationMessage.set(
+          'Some Discord notifications are waiting to be retried. Refresh the server page later to check again.',
+        );
+      } else if (result.sent > 0) {
+        this.notificationMessage.set(
+          `Sent ${result.sent} pending Discord notification${result.sent === 1 ? '' : 's'}.`,
+        );
+      }
+    } catch (error) {
+      console.error(`Failed to retry Discord notifications for guild ${this.guildId}:`, error);
+      this.notificationMessage.set('Could not check pending Discord notifications. Refresh to try again.');
+    }
   }
 
   protected selectAuction(auctionId: string) {

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getDiscordGuildIds } from '../_shared/discord-guilds.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,10 +20,6 @@ interface DiscordUser {
   username: string;
   global_name: string | null;
   avatar: string | null;
-}
-
-interface DiscordGuild {
-  id: string;
 }
 
 const response = (status: number, body: Record<string, unknown>) =>
@@ -149,41 +146,15 @@ Deno.serve(async (request: Request) => {
     return response(403, { error: 'The Discord account must match the account used to sign in.' });
   }
 
-  let isGuildMember = false;
-  let after: string | null = null;
+  let discordGuildIds: Set<string>;
   try {
-    do {
-      const guildsUrl = new URL('https://discord.com/api/v10/users/@me/guilds');
-      guildsUrl.searchParams.set('limit', '200');
-      if (after) {
-        guildsUrl.searchParams.set('after', after);
-      }
-
-      const guildsResponse = await fetch(guildsUrl, {
-        headers: { Authorization: `Bearer ${body.providerToken}` },
-      });
-      if (!guildsResponse.ok) {
-        console.error('Discord guild membership verification failed:', guildsResponse.status);
-        return response(502, { error: 'Could not verify your Discord server membership.' });
-      }
-
-      const guilds = await guildsResponse.json() as DiscordGuild[];
-      isGuildMember = guilds.some((guild) => guild.id === auction.guild_id);
-      if (isGuildMember || guilds.length < 200) {
-        break;
-      }
-      const nextAfter = guilds[guilds.length - 1]?.id ?? null;
-      if (!nextAfter || nextAfter === after) {
-        break;
-      }
-      after = nextAfter;
-    } while (after);
+    discordGuildIds = await getDiscordGuildIds(body.providerToken);
   } catch (error) {
     console.error('Discord guild membership verification request failed:', error);
     return response(502, { error: 'Could not verify your Discord server membership.' });
   }
 
-  if (!isGuildMember) {
+  if (!discordGuildIds.has(auction.guild_id)) {
     return response(403, { error: 'Join this Discord server before placing a bid.' });
   }
 

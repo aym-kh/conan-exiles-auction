@@ -477,7 +477,7 @@ export class Auction {
         currencySymbol: string,
         amount: number,
         itemId: string | null = null,
-    ): Promise<void> {
+    ): Promise<string> {
         const { data: { session }, error: sessionError } = await this.client.auth.getSession();
         if (sessionError) {
             throw sessionError;
@@ -486,7 +486,7 @@ export class Auction {
             throw new Error('Your Discord session has expired. Sign out and sign in again before bidding.');
         }
 
-        const { error } = await this.client.functions.invoke('place-bid', {
+        const { data, error } = await this.client.functions.invoke<{ bidId: string }>('place-bid', {
             body: {
                 auctionId,
                 itemId,
@@ -511,6 +511,10 @@ export class Auction {
             }
             throw error;
         }
+        if (typeof data?.bidId !== 'string') {
+            throw new Error('The bid was accepted, but the bid confirmation was invalid.');
+        }
+        return data.bidId;
     }
 
     subscribeToAuctionBids(auctionId: string, onChange: () => void): RealtimeChannel {
