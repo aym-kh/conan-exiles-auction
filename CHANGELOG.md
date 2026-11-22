@@ -11,6 +11,32 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+### Added
+- Multi-item auctions with individually named and described items, item-specific bidding, and item-specific images.
+- Open, anonymous, and sealed bidding formats.
+- Sealed offers that bidders can revise until the auction closes, followed by anonymized result reveal after closing.
+- A completed sealed-auctions archive with pagination in the guild dashboard.
+- Auction and item image uploads, public image galleries, thumbnails, image removal, and upload progress feedback.
+- Staged image uploads for authenticated users before an auction is saved.
+- Discord server-owner webhook configuration with ownership and webhook validation, a test notification, and the ability to disable notifications.
+- Bot-free Discord auction notifications for new auctions, eligible bids, and auctions ending within one hour.
+- Durable notification outbox with retries, delivery status tracking, and duplicate-event protection.
+- Scheduled ending-soon reminder delivery through Supabase Vault and `pg_cron`.
+
+### Changed
+- Redesigned the auction form into a responsive layout, with a wider multi-item mode and side-by-side item and settings panels.
+- Updated auction details and guild dashboards to support item selection, item-specific bid history, and completed sealed-auction browsing.
+- Replaced the legacy blind-auction setting with explicit `open`, `anonymous`, and `sealed` bidding formats.
+- Locked bidding format changes after the first bid is placed.
+- Bidding is now validated and compared independently for each multi-item auction item.
+- Discord notification embeds now include auction details, item and currency information, bidder visibility rules, and attached images.
+- Discord notifications now use a private, server-side outbox and Edge Function dispatch instead of direct delivery from the browser.
+
+### Fixed
+- Sealed bids are hidden while active and remain excluded from live Discord notifications.
+- Removed direct public write access to the notification settings and outbox tables.
+- Added image upload size, MIME-type, and attachment ownership restrictions.
+
 ## [3.1.1] - 2026-11-12
 
 ### Fixed
