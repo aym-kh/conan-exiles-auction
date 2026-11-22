@@ -1,5 +1,9 @@
 <app-title [content]="titleContent"></app-title>
 
+@if (notificationMessage()) {
+<p class="dashboard-error mb-4" role="status">{{ notificationMessage() }}</p>
+}
+
 <div class="dashboard">
     <div class="auction-browser">
         <section class="auction-list space-y-4" aria-labelledby="auction-list-title">

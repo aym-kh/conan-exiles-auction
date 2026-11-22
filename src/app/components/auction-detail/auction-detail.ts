@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { Auction } from '../../services/auction';
+import { DiscordNotifications } from '../../services/discord-notifications';
 import { SupabaseService } from '../../services/supabase';
 import { LoadingService } from '../../services/loading';
 import { IAuction, IAuctionBid, IAuctionImage } from '../../types';
@@ -27,6 +28,7 @@ export class AuctionDetail implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auctionService = inject(Auction);
+  private readonly discordNotifications = inject(DiscordNotifications);
   private readonly supabaseService = inject(SupabaseService);
   protected readonly loadingService = inject(LoadingService);
   private readonly fb = inject(FormBuilder).nonNullable;
@@ -255,9 +257,36 @@ export class AuctionDetail implements OnInit, OnDestroy {
     this.bidError.set(null);
     this.bidSubmissionMessage.set(null);
     try {
-      await this.auctionService.placeBid(auction.id, currencySymbol, amount, this.selectedItemId());
+      const bidId = await this.auctionService.placeBid(
+        auction.id,
+        currencySymbol,
+        amount,
+        this.selectedItemId(),
+      );
       if (auction.bid_visibility === 'sealed') {
         this.bidSubmissionMessage.set('Your sealed offer has been recorded. You can revise it until bidding closes.');
+      } else {
+        try {
+          const dispatch = await this.discordNotifications.dispatchPendingNotifications({
+            auctionId: auction.id,
+            eventType: 'bid_placed',
+            bidId,
+          });
+          if (dispatch.retrying > 0 || dispatch.failed > 0 || dispatch.pending > 0) {
+            this.bidSubmissionMessage.set(
+              'Your bid was accepted, but its Discord notification is still pending.',
+            );
+          } else if (dispatch.sent > 0) {
+            this.bidSubmissionMessage.set('Your bid was accepted and shared with the server.');
+          } else {
+            this.bidSubmissionMessage.set('Your bid was accepted.');
+          }
+        } catch (error) {
+          console.error(`Bid ${bidId} was accepted, but Discord notification delivery failed:`, error);
+          this.bidSubmissionMessage.set(
+            'Your bid was accepted, but its Discord notification could not be confirmed.',
+          );
+        }
       }
       await this.loadBids(auction.id);
     } catch (error) {

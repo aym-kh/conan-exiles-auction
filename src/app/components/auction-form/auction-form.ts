@@ -3,6 +3,7 @@ import { Component, inject, Input, OnInit, output, signal } from '@angular/core'
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { FilePondFile } from 'filepond';
 import { Auction } from '../../services/auction';
+import { DiscordNotifications } from '../../services/discord-notifications';
 import { SupabaseService } from '../../services/supabase';
 import {
   IAuction,
@@ -42,6 +43,7 @@ export class AuctionForm implements OnInit {
 
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly auctionService = inject(Auction);
+  private readonly discordNotifications = inject(DiscordNotifications);
   private readonly supabaseService = inject(SupabaseService);
 
   @Input({ required: true }) guildId!: string;
@@ -389,6 +391,27 @@ export class AuctionForm implements OnInit {
         imageUploads,
         (completed, total) => this.imageUploadProgress.set({ completed, total }),
       );
+
+      if (!isEditMode) {
+        try {
+          const dispatch = await this.discordNotifications.dispatchPendingNotifications({
+            auctionId: savedAuction.id,
+            eventType: 'auction_created',
+          });
+          if (dispatch.retrying > 0 || dispatch.failed > 0 || dispatch.pending > 0) {
+            this.errorMessage.set(
+              'The auction was saved, but one or more Discord notifications could not be delivered yet. Retry saving or refresh the server page later.',
+            );
+            return;
+          }
+        } catch (error) {
+          console.error(`Auction ${savedAuction.id} was saved, but Discord notification delivery failed:`, error);
+          this.errorMessage.set(
+            'The auction was saved, but its Discord notification could not be sent. Retry saving or refresh the server page later.',
+          );
+          return;
+        }
+      }
 
       if (isEditMode) {
         this.auctionUpdated.emit();
