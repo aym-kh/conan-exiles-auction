@@ -11,6 +11,8 @@ entries into a dated section automatically.
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-11-22
+
 ### Added
 - Multi-item auctions with individually named and described items, item-specific bidding, and item-specific images.
 - Open, anonymous, and sealed bidding formats.
